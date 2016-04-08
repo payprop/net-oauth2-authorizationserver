@@ -1,0 +1,11 @@
+Changes
+MANIFEST
+Makefile.PL
+README.md
+lib/Net/OAuth2/AuthorizationServer.pm
+lib/Net/OAuth2/AuthorizationServer/AuthorizationCodeGrant.pm
+t/000_prerequisites.t
+t/001_compiles_pod.t
+t/003_changes.t
+t/net/oauth2/authorizationserver.t
+t/net/oauth2/authorizationserver/authorizationcodegrant.t
