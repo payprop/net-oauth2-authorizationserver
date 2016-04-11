@@ -34,6 +34,16 @@ OAuth Authorisation Code Grant as document at [http://tools.ietf.org/html/rfc674
 
 See [Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant](https://metacpan.org/pod/Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant).
 
+## implicit\_grant
+
+## resource\_owner\_password\_grant
+
+## client\_grant
+
+## extension\_grant
+
+Not yet implemented.
+
 # EXAMPLES
 
 There are examples included with this distribution in the examples/ dir.

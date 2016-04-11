@@ -53,6 +53,18 @@ sub auth_code_grant {
     return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant->new( @args, );
 }
 
+=head2 implicit_grant
+
+=head2 resource_owner_password_grant
+
+=head2 client_grant
+
+=head2 extension_grant
+
+Not yet implemented.
+
+=cut
+
 =head1 EXAMPLES
 
 There are examples included with this distribution in the examples/ dir.
