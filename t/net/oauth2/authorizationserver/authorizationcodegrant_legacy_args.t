@@ -5,7 +5,6 @@ use warnings;
 
 use Test::Most;
 use Test::Exception;
-use Mojo::JWT;
 
 use_ok( 'Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant' );
 
@@ -19,11 +18,13 @@ throws_ok(
 
 my $Grant;
 
-foreach my $with_callbacks ( 0,1 ) {
+# undocumented legacy_args attribute for back compat
+# in Mojolicious::Plugin::OAuth2::Server
+foreach my $legacy_args ( 0,1 ) {
 
 	isa_ok(
 		$Grant = Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant->new(
-			jwt_secret => 'Some Secret Key',
+			legacy_args => $legacy_args ? $Grant : 0,
 			clients    => {
 				test_client => {
 					client_secret => 'letmein',
@@ -37,14 +38,14 @@ foreach my $with_callbacks ( 0,1 ) {
 
 			# am passing in a reference to the modules subs to ensure we hit
 			# the code paths to call callbacks
-			( $with_callbacks ? (
-				verify_client_cb => sub { return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant::_verify_client( $Grant,@_ ) },
-				store_auth_code_cb => sub { return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant::_store_auth_code( $Grant,@_ ) },
-				verify_auth_code_cb => sub { return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant::_verify_auth_code( $Grant,@_ ) },
-				store_access_token_cb => sub { return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant::_store_access_token( $Grant,@_ ) },
-				verify_access_token_cb => sub { return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant::_verify_access_token( $Grant,@_ ) },
-				login_resource_owner_cb => sub { return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant::_login_resource_owner( $Grant,@_ ) },
-				confirm_by_resource_owner_cb => sub { return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant::_confirm_by_resource_owner( $Grant,@_ ) },
+			( $legacy_args ? (
+				verify_client_cb => sub { return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant::_verify_client( shift,client_id => shift, scopes => shift ) },
+				store_auth_code_cb => sub { return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant::_store_auth_code( shift,auth_code => shift,client_id => shift,expires_in => shift,redirect_uri => shift,scopes => [ @_ ] ) },
+				verify_auth_code_cb => sub { return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant::_verify_auth_code( shift,client_id => shift,client_secret => shift, auth_code => shift, redirect_uri => shift ) },
+				store_access_token_cb => sub { return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant::_store_access_token( shift,client_id => shift,auth_code => shift,access_token => shift,refresh_token => shift,expires_in => shift,scopes => shift,old_refresh_token => shift ) },
+				verify_access_token_cb => sub { return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant::_verify_access_token( shift,access_token => shift,scopes => shift,is_refresh_token => shift ) },
+				login_resource_owner_cb => sub { return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant::_login_resource_owner( shift,client_id => shift,scopes => shift ) },
+				confirm_by_resource_owner_cb => sub { return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant::_confirm_by_resource_owner( shift,client_id => shift,scopes => shift ) },
 			) : () ),
 
 
@@ -103,32 +104,12 @@ sub run_tests {
 		user_id      => 1,
 	),'->token (auth code)' );
 
-	like( $auth_code,qr/\./,'token looks like a JWT' );
-
-	cmp_deeply(
-		Mojo::JWT->new( secret => 'Some Secret Key' )->decode( $auth_code ),
-		{
-			'aud' => 'https://come/back',
-			'client' => 'test_client',
-			'exp' => ignore(),
-			'iat' => ignore(),
-			'jti' => ignore(),
-			'scopes' => [
-				'eat',
-				'sleep'
-			],
-			'type' => 'auth',
-			'user_id' => 1
-		},
-		'auth code decodes correctly',
-	);
-
-	ok( !$Grant->store_auth_code(
+	ok( $Grant->store_auth_code(
 		client_id    => 'test_client',
 		auth_code    => $auth_code,
-		redirect_uri => 'http://come/back',
+		redirect_uri => 'https://come/back',
 		scopes       => [ qw/ eat sleep / ],
-	),'->store_auth_code (noop when ->jwt_secret set)' );
+	),'->store_auth_code' );
 
 	note( "verify_auth_code" );
 
@@ -159,6 +140,7 @@ sub run_tests {
 		ok( ! $scopes,'has no scopes' );
 	}
 
+	my $og_auth_code = $auth_code;
 	chop( $auth_code );
 
 	( $client,$vac_error,$scopes ) = $Grant->verify_auth_code(
@@ -166,7 +148,7 @@ sub run_tests {
 		auth_code => $auth_code,
 	);
 
-	ok( ! $client,'->verify_auth_code, JWT fiddled with' );
+	ok( ! $client,'->verify_auth_code, token fiddled with' );
 	is( $vac_error,'invalid_grant','has error' );
 	ok( ! $scopes,'has no scopes' );
 
@@ -186,12 +168,13 @@ sub run_tests {
 		user_id      => 1,
 	),'->token (refresh token)' );
 
-	ok( !$Grant->store_access_token(
+	ok( $Grant->store_access_token(
 		client_id     => 'test_client',
+		auth_code     => $og_auth_code,
 		access_token  => $access_token,
 		refresh_token => $refresh_token,
 		scopes       => [ qw/ eat sleep / ],
-	),'->store_auth_code (noop when ->jwt_secret set)' );
+	),'->store_auth_code' );
 
 	note( "verify_access_token" );
 
@@ -234,7 +217,7 @@ sub run_tests {
 	( $res,$error ) = $Grant->verify_token_and_scope(
 		auth_header      => "Bearer $access_token",
 		scopes           => [ qw/ eat sleep / ],
-		refresh_token    => 0,
+		is_refresh_token => 0,
 	);
 
 	ok( $res,'->verify_token_and_scope, valid access token' );
@@ -249,24 +232,7 @@ sub run_tests {
 	ok( $res,'->verify_token_and_scope, valid refresh token' );
 	ok( ! $error,'has no error' );
 
-	( $res,$error ) = $Grant->verify_token_and_scope(
-		auth_header   => "Basic $access_token",
-		scopes        => [ qw/ eat sleep / ],
-		refresh_token => 0,
-	);
-
-	ok( ! $res,'->verify_token_and_scope, bad auth header' );
-	is( $error,'invalid_request','has error' );
-
-	( $res,$error ) = $Grant->verify_token_and_scope(
-		auth_header   => undef,
-		scopes        => [ qw/ eat sleep / ],
-		refresh_token => 0,
-	);
-
-	ok( ! $res,'->verify_token_and_scope, no auth header' );
-	is( $error,'invalid_request','has error' );
-
+	my $og_access_token = $access_token;
 	chop( $access_token );
 
 	( $res,$error ) = $Grant->verify_access_token(
@@ -275,6 +241,22 @@ sub run_tests {
 		is_refresh_token => 0,
 	);
 
-	ok( ! $res,'->verify_access_token, JWT fiddled with' );
+	ok( ! $res,'->verify_access_token, token fiddled with' );
 	is( $error,'invalid_grant','has error' );
+
+	note( "verify_auth_code" );
+	( $client,$vac_error,$scopes ) = $Grant->verify_auth_code( %valid_auth_code );
+
+	ok( ! $client,'->verify_auth_code, correct args but second time' );
+	is( $vac_error,'invalid_grant','has no error' );
+	ok( ! $scopes,'has no scopes' );
+
+	( $res,$error ) = $Grant->verify_access_token(
+		access_token     => $access_token,
+		scopes           => [ qw/ eat sleep / ],
+		is_refresh_token => 0,
+	);
+
+	ok( ! $res,'->verify_access_token, access token revoked' );
+	ok( $error,'has error' );
 }

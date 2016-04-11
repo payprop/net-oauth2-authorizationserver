@@ -15,7 +15,18 @@ Authorization Server
 
 =head1 SYNOPSIS
 
+    my $Server = Net::OAuth2::AuthorizationServer->new;
+
+    my $Grant  = $Server->auth_code_grant(
+        ...
+    );
+
 =head1 DESCRIPTION
+
+This module is the gateway to the various OAuth2 grant flows, as documented
+at L<https://tools.ietf.org/html/rfc6749>. You should see the various modules
+within this distribution for the implementation and usage details on various
+types of grant flows.
 
 =cut
 
@@ -29,6 +40,14 @@ use Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant;
 
 our $VERSION = '0.01';
 
+=head2 auth_code_grant
+
+OAuth Authorisation Code Grant as document at L<http://tools.ietf.org/html/rfc6749#section-4.1>.
+
+See L<Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant>.
+
+=cut
+
 sub auth_code_grant {
 	my ( $self,@args ) = @_;
 	return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant->new(
@@ -38,7 +57,7 @@ sub auth_code_grant {
 
 =head1 EXAMPLES
 
-There are more examples included with this distribution in the examples/ dir.
+There are examples included with this distribution in the examples/ dir.
 See examples/README for more information about these examples.
 
 =head1 REFERENCES

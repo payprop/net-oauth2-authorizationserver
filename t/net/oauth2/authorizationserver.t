@@ -20,4 +20,11 @@ can_ok(
 	/
 );
 
+isa_ok(
+    my $Grant = $Server->auth_code_grant(
+		clients => { foo => {} },
+    ),
+    'Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant'
+);
+
 done_testing();

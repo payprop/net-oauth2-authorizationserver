@@ -1,6 +1,6 @@
 Revision history for Net-OAuth2-AuthorizationServer
 
-0.01     2016-04-08
+0.01     2016-04-11
         - First release, broken out of Mojolicious::Plugin::OAuth2::Server
           for better abstraction and decoupling from the Mojolicious framework.
           Should also allow tidying up of method args and easier additions of

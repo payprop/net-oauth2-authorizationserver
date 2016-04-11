@@ -23,6 +23,7 @@ WriteMakefile(
   },
   BUILD_REQUIRES => {
     'Test::Most'      => 0,
+    'Test::Exception' => 0.32,
   },
   META_MERGE => {
     requires  => {

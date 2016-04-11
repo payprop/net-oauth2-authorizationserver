@@ -9,17 +9,20 @@ Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant - OAuth2 Authorization 
   my $Grant = Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant->new(
     clients => {
       TrendyNewService => {
-        client_secret => 'boo',
+        client_secret => 'TopSecretClientSecret',
         scopes        => {
-          "post_images" => 1,
-          "annoy_friends" => 1,
+          post_images   => 1,
+          annoy_friends => 1,
         },
       },
     }
   );
 
   # verify a client against known clients
-  my ( $is_valid,$error ) = $Grant->verify_client( $client_id,\@scopes );
+  my ( $is_valid,$error ) = $Grant->verify_client(
+    client_id => $client_id,
+    scopes    => [ qw/ list of scopes / ],
+  );
 
   if ( ! $Grant->login_resource_owner ) {
     # resource owner needs to login
@@ -27,50 +30,57 @@ Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant - OAuth2 Authorization 
   }
 
   # have resource owner confirm scopes
-  my $confirmed = $Grant->confirm_by_resource_owner( $client_id,\@scopes );
+  my $confirmed = $Grant->confirm_by_resource_owner(
+    client_id       => $client_id,
+    scopes          => [ qw/ list of scopes / ],
+  );
 
   # generate a token
   my $token = $Grant->token(
-    $client_id,
-    \@scopes,
-    'auth',        # one of: auth, access, refresh
-    $redirect_url, # optional
-    $user_id,      # optional
+    client_id       => $client_id,
+    scopes          => [ qw/ list of scopes / ],
+    type            => 'auth', # one of: auth, access, refresh
+    redirect_uri    => $redirect_uri,
+    user_id         => $user_id,      # optional
   );
 
   # store the auth code
   $Grant->store_auth_code(
-    $token,
-    $client_id,
-    $Grant->auth_code_ttl,
-    $redirect_url,
-    @scopes
+    auth_code       => $auth_code,
+    client_id       => $client_id,
+    redirect_uri    => $uri,
+    scopes          => [ qw/ list of scopes / ],
   );
 
   # verify an auth code
   my ( $client,$error,$scope,$user_id ) = $Grant->verify_auth_code(
-    $client_id,
-    $client_secret,
-    $auth_code,
-    $redirect_url
+    client_id       => $client_id,
+    client_secret   => $client_secret,
+    auth_code       => $auth_code,
+    redirect_uri    => $uri,
   );
 
   # store access token
   $Grant->store_access_token(
-    $client,
-    $auth_code,
-    $access_token,
-    $refresh_token,
-    $Grant->access_token_ttl,
-    $scope,
-    $old_refresh_token
+    client_id         => $client,
+    auth_code         => $auth_code,
+    access_token      => $access_token,
+    refresh_token     => $refresh_token,
+    scopes            => [ qw/ list of scopes / ],
+    old_refresh_token => $old_refresh_token,
   );
 
   # verify an access token
   my ( $is_valid,$error ) = $Grant->verify_access_token(
-    $access_token,
-    \@scopes,
-    $refresh_token
+    access_token     => $access_token,
+    scopes           => [ qw/ list of scopes / ],
+    is_refresh_token => 0,
+  );
+
+  # or:
+  my ( $client,$error,$scope,$user_id ) = $Grant->verify_token_and_scope(
+    refresh_token    => $refresh_token,
+    auth_header      => $http_authorization_header,
   );
 
 =head1 DESCRIPTION
@@ -149,34 +159,34 @@ The validity period of the generated authorization code in seconds. Defaults to
 The validity period of the generated access token in seconds. Defaults to 3600
 seconds (1 hour)
 
-=head2 login_resource_owner *
+=head2 login_resource_owner_cb *
 
 A callback that tells the module if a Resource Owner (user) is logged in. See
 L<REQUIRED FUNCTIONS>.
 
-=head2 confirm_by_resource_owner *
+=head2 confirm_by_resource_owner_cb *
 
 A callback that tells the module if the Resource Owner allowed or disallowed
 access to the Resource Server by the Client. See L<REQUIRED FUNCTIONS>.
 
-=head2 verify_client *
+=head2 verify_client_cb *
 
 A callback that tells the module if a Client is know and given the scopes is
 allowed to ask for an authorization code. See L<REQUIRED FUNCTIONS>.
 
-=head2 store_auth_code *
+=head2 store_auth_code_cb *
 
 A callback to store the generated authorization code. See L<REQUIRED FUNCTIONS>.
 
-=head2 verify_auth_code *
+=head2 verify_auth_code_cb *
 
 A callback to verify an authorization code. See L<REQUIRED FUNCTIONS>.
 
-=head2 store_access_token *
+=head2 store_access_token_cb *
 
 A callback to store generated access / refresh tokens. See L<REQUIRED FUNCTIONS>.
 
-=head2 verify_access_token *
+=head2 verify_access_token_cb *
 
 A callback to verify an access token. See L<REQUIRED FUNCTIONS>.
 
@@ -251,7 +261,7 @@ sub BUILD {
 
 	if (
 		# if we don't have a list of clients
-		! $self->has_clients
+		! $self->_has_clients
 		# we must know how to verify clients and tokens
 		and (
 			! $args->{verify_client_cb}
@@ -265,7 +275,7 @@ sub BUILD {
 	}
 }
 
-sub has_clients { return keys %{ shift->clients // {} } ? 1 : 0 }
+sub _has_clients { return keys %{ shift->clients // {} } ? 1 : 0 }
 
 sub verify_client {
 	_delegate_to_cb_or_private( 'verify_client',@_ );
@@ -299,7 +309,7 @@ sub verify_token_and_scope {
   my ( $self,%args ) = @_;
 
   my ( $refresh_token,$scopes_ref,$auth_header,$is_legacy_caller )
-	= @args{qw/ is_refresh_token scopes auth_header /};
+	= @args{qw/ refresh_token scopes auth_header /};
 
   my $access_token;
 
@@ -582,11 +592,13 @@ sub _store_auth_code {
 
   return if $self->jwt_secret;
 
+  $expires_in //= $self->auth_code_ttl;
+
   $self->auth_codes->{$auth_code} = {
     client_id     => $client_id,
     expires       => time + $expires_in,
     redirect_uri  => $uri,
-    scope         => { map { $_ => 1 } @{ $scopes_ref // [] } },
+    scope         => $scopes_ref,
   };
 
   return 1;
@@ -664,6 +676,9 @@ sub _verify_auth_code {
   my ( $client_id,$client_secret,$auth_code,$uri )
 	= @args{qw/ client_id client_secret auth_code redirect_uri / };
 
+  my $client = $self->clients->{$client_id}
+    || return ( 0,'unauthorized_client' );
+
   return $self->_verify_auth_code_jwt( %args ) if $self->jwt_secret;
 
   my ( $sec,$usec,$rand ) = split( '-',decode_base64( $auth_code ) );
@@ -722,7 +737,7 @@ sub _verify_auth_code_jwt {
 
   my $scope = $auth_code_payload->{scopes};
 
-  return ( $client_id,undef,$scope,undef );
+  return ( $client_id,undef,$scope );
 }
 
 =head2 store_access_token_cb
@@ -825,6 +840,8 @@ sub _store_access_token {
     $c_id,$auth_code,$access_token,$refresh_token,
     $expires_in,$scope,$old_refresh_token
   ) = @args{qw/ client_id auth_code access_token refresh_token expires_in scopes old_refresh_token / };
+
+  $expires_in //= $self->access_token_ttl;
 
   return if $self->jwt_secret;
 
@@ -945,49 +962,46 @@ sub _verify_access_token {
   my ( $self,%args ) = @_;
   return $self->_verify_access_token_jwt( %args ) if $self->jwt_secret;
 
-  my ( $access_token,$scopes_ref,$is_refresh_token )
+  my ( $a_token,$scopes_ref,$is_refresh_token )
 	= @args{qw/ access_token scopes is_refresh_token /};
 
   if (
     $is_refresh_token
-    && exists( $self->refresh_tokens->{$access_token} )
+    && exists( $self->refresh_tokens->{$a_token} )
   ) {
 
     if ( $scopes_ref ) {
       foreach my $scope ( @{ $scopes_ref // [] } ) {
-        if (
-          ! exists( $self->refresh_tokens->{$access_token}{scope}{$scope} )
-          or ! $self->refresh_tokens->{$access_token}{scope}{$scope}
-        ) {
-          return ( 0,'invalid_grant' )
-        }
+        return ( 0,'invalid_grant' )
+          if !$self->_has_scope( $scope,$self->refresh_tokens->{$a_token}{scope} );
       }
     }
 
-    return $self->refresh_tokens->{$access_token}{client_id};
+    return ( $self->refresh_tokens->{$a_token}{client_id},undef );
   }
-  elsif ( exists( $self->access_tokens->{$access_token} ) ) {
+  elsif ( exists( $self->access_tokens->{$a_token} ) ) {
 
-    if ( $self->access_tokens->{$access_token}{expires} <= time ) {
-      $self->_revoke_access_token( $access_token );
+    if ( $self->access_tokens->{$a_token}{expires} <= time ) {
+      $self->_revoke_access_token( $a_token );
       return ( 0,'invalid_grant' )
     } elsif ( $scopes_ref ) {
 
       foreach my $scope ( @{ $scopes_ref // [] } ) {
-        if (
-          ! exists( $self->access_tokens->{$access_token}{scope}{$scope} )
-          or ! $self->access_tokens->{$access_token}{scope}{$scope}
-        ) {
-          return ( 0,'invalid_grant' )
-        }
+        return ( 0,'invalid_grant' )
+          if !$self->_has_scope( $scope,$self->access_tokens->{$a_token}{scope} );
       }
 
     }
 
-    return $self->access_tokens->{$access_token}{client_id};
+    return ( $self->access_tokens->{$a_token}{client_id},undef );
   }
 
   return ( 0,'invalid_grant' )
+}
+
+sub _has_scope {
+	my ( $self,$scope,$available_scopes ) = @_;
+	return scalar grep { $_ eq $scope } @{ $available_scopes // [] };
 }
 
 sub _verify_access_token_jwt {
@@ -1002,7 +1016,6 @@ sub _verify_access_token_jwt {
     $access_token_payload = Mojo::JWT->new( secret => $self->jwt_secret )
       ->decode( $access_token );
   } catch {
-    chomp;
     return ( 0,'invalid_grant' );
   };
 
@@ -1016,16 +1029,15 @@ sub _verify_access_token_jwt {
 
     if ( $scopes_ref ) {
       foreach my $scope ( @{ $scopes_ref // [] } ) {
-        if ( ! grep { $_ eq $scope } @{ $access_token_payload->{scopes} } ) {
-          return ( 0,'invalid_grant' );
-        }
+        return ( 0,'invalid_grant' )
+          if !$self->_has_scope( $scope,$access_token_payload->{scopes} );
       }
     }
 
-    return $access_token_payload;
+    return ( $access_token_payload,undef );
   }
 
-  return 0;
+  return ( 0,'invalid_grant' );
 }
 
 sub _revoke_access_token {
@@ -1036,7 +1048,7 @@ sub _revoke_access_token {
 sub token {
   my ( $self,%args ) = @_;
 
-  my ( $client_id,$scopes,$type,$redirect_url,$user_id )
+  my ( $client_id,$scopes,$type,$redirect_uri,$user_id )
 	= @args{qw/ client_id scopes type redirect_uri user_id / };
 
   my $ttl = $type eq 'auth' ? $self->auth_code_ttl : $self->access_token_ttl;
@@ -1056,7 +1068,7 @@ sub token {
         # Registered Claim Names
 #        iss    => undef, # us, the auth server / application
 #        sub    => undef, # the logged in user
-        aud    => $redirect_url, # the "audience"
+        aud    => $redirect_uri, # the "audience"
         jti    => random_string(32),
 
         # Private Claim Names
