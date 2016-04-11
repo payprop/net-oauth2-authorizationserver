@@ -11,7 +11,7 @@ Authorization Server
 
 =head1 VERSION
 
-0.02
+0.03
 
 =head1 SYNOPSIS
 
@@ -38,7 +38,7 @@ use Types::Standard qw/ :all /;
 
 use Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant;
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head2 auth_code_grant
 
