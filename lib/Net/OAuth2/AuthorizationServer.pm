@@ -49,10 +49,8 @@ See L<Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant>.
 =cut
 
 sub auth_code_grant {
-	my ( $self,@args ) = @_;
-	return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant->new(
-		@args,
-	);
+    my ( $self, @args ) = @_;
+    return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant->new( @args, );
 }
 
 =head1 EXAMPLES

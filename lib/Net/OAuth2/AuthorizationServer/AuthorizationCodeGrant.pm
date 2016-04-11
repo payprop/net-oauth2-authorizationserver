@@ -206,192 +206,200 @@ use Time::HiRes qw/ gettimeofday /;
 
 # undocumented for Mojolicious::Plugin::OAuth2::Server
 has 'legacy_args' => (
-	is        => 'rw',
-	required  => 0,
+    is       => 'rw',
+    required => 0,
 );
 
 has 'jwt_secret' => (
-	is        => 'ro',
-	isa       => Str,
-	required  => 0,
+    is       => 'ro',
+    isa      => Str,
+    required => 0,
 );
 
 has 'auth_code_ttl' => (
-	is        => 'ro',
-	isa       => Int,
-	required  => 0,
-	default   => sub { 600 },
+    is       => 'ro',
+    isa      => Int,
+    required => 0,
+    default  => sub { 600 },
 );
 
 has 'access_token_ttl' => (
-	is        => 'ro',
-	isa       => Int,
-	required  => 0,
-	default   => sub { 3600 },
+    is       => 'ro',
+    isa      => Int,
+    required => 0,
+    default  => sub { 3600 },
 );
 
-has [ qw/
-	clients
-	auth_codes
-	access_tokens
-	refresh_tokens
-/ ] => (
-	is        => 'ro',
-	isa       => Maybe[HashRef],
-	required  => 0,
-	default   => sub { {} },
-);
+has [
+    qw/
+        clients
+        auth_codes
+        access_tokens
+        refresh_tokens
+        /
+    ] => (
+    is       => 'ro',
+    isa      => Maybe [HashRef],
+    required => 0,
+    default  => sub { {} },
+    );
 
-has [ qw/
-	verify_client_cb
-	store_auth_code_cb
-	verify_auth_code_cb
-	store_access_token_cb
-	verify_access_token_cb
-	login_resource_owner_cb
-	confirm_by_resource_owner_cb
-/ ] => (
-	is        => 'ro',
-	isa       => Maybe[CodeRef],
-	required  => 0,
-);
+has [
+    qw/
+        verify_client_cb
+        store_auth_code_cb
+        verify_auth_code_cb
+        store_access_token_cb
+        verify_access_token_cb
+        login_resource_owner_cb
+        confirm_by_resource_owner_cb
+        /
+    ] => (
+    is       => 'ro',
+    isa      => Maybe [CodeRef],
+    required => 0,
+    );
 
 sub BUILD {
-	my ( $self,$args ) = @_;
+    my ( $self, $args ) = @_;
 
-	if (
-		# if we don't have a list of clients
-		! $self->_has_clients
-		# we must know how to verify clients and tokens
-		and (
-			! $args->{verify_client_cb}
-			and ! $args->{store_auth_code_cb}
-			and ! $args->{verify_auth_code_cb}
-			and ! $args->{store_access_token_cb}
-			and ! $args->{verify_access_token_cb}
-		)
-	) {
-		croak __PACKAGE__ . " requires either clients or overrides"
-	}
+    if (
+        # if we don't have a list of clients
+        !$self->_has_clients
+
+        # we must know how to verify clients and tokens
+        and (   !$args->{ verify_client_cb }
+            and !$args->{ store_auth_code_cb }
+            and !$args->{ verify_auth_code_cb }
+            and !$args->{ store_access_token_cb }
+            and !$args->{ verify_access_token_cb } )
+        )
+    {
+        croak __PACKAGE__ . " requires either clients or overrides";
+    }
 }
 
 sub _has_clients { return keys %{ shift->clients // {} } ? 1 : 0 }
 
 sub verify_client {
-	_delegate_to_cb_or_private( 'verify_client',@_ );
+    _delegate_to_cb_or_private( 'verify_client', @_ );
 }
 
 sub store_auth_code {
-	_delegate_to_cb_or_private( 'store_auth_code',@_ );
+    _delegate_to_cb_or_private( 'store_auth_code', @_ );
 }
 
 sub verify_auth_code {
-	_delegate_to_cb_or_private( 'verify_auth_code',@_ );
+    _delegate_to_cb_or_private( 'verify_auth_code', @_ );
 }
 
 sub store_access_token {
-	_delegate_to_cb_or_private( 'store_access_token',@_ );
+    _delegate_to_cb_or_private( 'store_access_token', @_ );
 }
 
 sub verify_access_token {
-	_delegate_to_cb_or_private( 'verify_access_token',@_ );
+    _delegate_to_cb_or_private( 'verify_access_token', @_ );
 }
 
 sub login_resource_owner {
-	_delegate_to_cb_or_private( 'login_resource_owner',@_ );
+    _delegate_to_cb_or_private( 'login_resource_owner', @_ );
 }
 
 sub confirm_by_resource_owner {
-	_delegate_to_cb_or_private( 'confirm_by_resource_owner',@_ );
+    _delegate_to_cb_or_private( 'confirm_by_resource_owner', @_ );
 }
 
 sub verify_token_and_scope {
-  my ( $self,%args ) = @_;
+    my ( $self, %args ) = @_;
 
-  my ( $refresh_token,$scopes_ref,$auth_header,$is_legacy_caller )
-	= @args{qw/ refresh_token scopes auth_header /};
+    my ( $refresh_token, $scopes_ref, $auth_header, $is_legacy_caller ) =
+        @args{ qw/ refresh_token scopes auth_header / };
 
-  my $access_token;
+    my $access_token;
 
-  if ( ! $refresh_token ) {
-    if ( $auth_header ) {
-      my ( $auth_type,$auth_access_token ) = split( / /,$auth_header );
+    if ( !$refresh_token ) {
+        if ( $auth_header ) {
+            my ( $auth_type, $auth_access_token ) = split( / /, $auth_header );
 
-      if ( $auth_type ne 'Bearer' ) {
-        return ( 0,'invalid_request' );
-      } else {
-        $access_token = $auth_access_token;
-      }
-    } else {
-      return ( 0,'invalid_request' );
+            if ( $auth_type ne 'Bearer' ) {
+                return ( 0, 'invalid_request' );
+            }
+            else {
+                $access_token = $auth_access_token;
+            }
+        }
+        else {
+            return ( 0, 'invalid_request' );
+        }
     }
-  } else {
-    $access_token = $refresh_token;
-  }
-  
-  return $self->verify_access_token(
-	%args,
-	access_token     => $access_token,
-	scopes           => $scopes_ref,
-	is_refresh_token => $refresh_token,
-  );
+    else {
+        $access_token = $refresh_token;
+    }
+
+    return $self->verify_access_token(
+        %args,
+        access_token     => $access_token,
+        scopes           => $scopes_ref,
+        is_refresh_token => $refresh_token,
+    );
 }
 
 sub _delegate_to_cb_or_private {
 
-	my $method = shift;
-	my $self   = shift;
-	my %args   = @_;
+    my $method = shift;
+    my $self   = shift;
+    my %args   = @_;
 
-	my $cb_method = "${method}_cb";
-	my $p_method  = "_$method";
+    my $cb_method = "${method}_cb";
+    my $p_method  = "_$method";
 
-	if ( my $cb = $self->$cb_method ) {
+    if ( my $cb = $self->$cb_method ) {
 
-		if ( my $obj = $self->legacy_args ) {
-			# for older users of Mojolicious::Plugin::OAuth2::Server need to pass
-			# the right arguments in the right order to each function
-			for ( $method ) {
+        if ( my $obj = $self->legacy_args ) {
 
-				/login_resource_owner|confirm_by_resource_owner|verify_client/ && do {
-					return $cb->(
-						$obj,@args{qw/ client_id scopes / }
-					);
-				};
+            # for older users of Mojolicious::Plugin::OAuth2::Server need to pass
+            # the right arguments in the right order to each function
+            for ( $method ) {
 
-				/store_auth_code/ && do {
-					my @scopes = @{ $args{scopes} };
-					return $cb->(
-						$obj,@args{qw/ auth_code client_id expires_in redirect_uri / },@scopes
-					);
-				};
+                /login_resource_owner|confirm_by_resource_owner|verify_client/ && do {
+                    return $cb->( $obj, @args{ qw/ client_id scopes / } );
+                };
 
-				/verify_auth_code/ && do {
-					return $cb->(
-						$obj,@args{qw/ client_id client_secret auth_code redirect_uri / }
-					);
-				};
+                /store_auth_code/ && do {
+                    my @scopes = @{ $args{ scopes } };
+                    return $cb->(
+                        $obj, @args{ qw/ auth_code client_id expires_in redirect_uri / }, @scopes
+                    );
+                };
 
-				/store_access_token/ && do {
-					return $cb->(
-						$obj,@args{qw/ client_id auth_code access_token refresh_token expires_in scopes old_refresh_token / }
-					);
-				};
+                /verify_auth_code/ && do {
+                    return $cb->( $obj,
+                        @args{ qw/ client_id client_secret auth_code redirect_uri / } );
+                };
 
-				/verify_access_token/ && do {
-					return $cb->(
-						$obj,@args{qw/ access_token scopes is_refresh_token / }
-					);
-				};
-			}
+                /store_access_token/ && do {
+                    return $cb->(
+                        $obj,
+                        @args{
+                            qw/ client_id auth_code access_token refresh_token expires_in scopes old_refresh_token /
+                        }
+                    );
+                };
 
-		} else {
-			return $cb->( %args );
-		}
+                /verify_access_token/ && do {
+                    return $cb->( $obj, @args{ qw/ access_token scopes is_refresh_token / } );
+                };
+            }
 
-	} else {
-		return $self->$p_method( %args );
-	}
+        }
+        else {
+            return $cb->( %args );
+        }
+
+    }
+    else {
+        return $self->$p_method( %args );
+    }
 }
 
 =head1 REQUIRED FUNCTIONS
@@ -421,7 +429,7 @@ things to login the resource owner (e.g. redirect) and return 0:
   my $resource_owner_logged_in_sub = sub {
     my ( %args ) = @_;
 
-	my $c = $args{mojo_controller};
+    my $c = $args{mojo_controller};
 
     if ( ! $c->session( 'logged_in' ) ) {
       # we need to redirect back to the /oauth/authorize route after
@@ -461,7 +469,7 @@ it should call the redirect_to method on the controller and return undef:
     my ( %args ) = @_;
 
     my ( $obj,$client_id,$scopes_ref )
-	  = @args{ qw/ mojo_controller client_id scopes / };
+        = @args{ qw/ mojo_controller client_id scopes / };
 
     my $is_allowed = $obj->flash( "oauth_${client_id}" );
 
@@ -508,7 +516,7 @@ element should be the error message in the case of the client being disallowed:
     my ( %args ) = @_;
 
     my ( $obj,$client_id,$scopes_ref )
-	  = @args{ qw/ mojo_controller client_id scopes / };
+        = @args{ qw/ mojo_controller client_id scopes / };
 
     if (
       my $client = $obj->db->get_collection( 'clients' )
@@ -532,25 +540,26 @@ element should be the error message in the case of the client being disallowed:
 =cut
 
 sub _verify_client {
-  my ( $self,%args ) = @_;
+    my ( $self, %args ) = @_;
 
-  my ( $client_id,$scopes_ref ) = @args{qw/ client_id scopes /};
+    my ( $client_id, $scopes_ref ) = @args{ qw/ client_id scopes / };
 
-  if ( my $client = $self->clients->{$client_id} ) {
+    if ( my $client = $self->clients->{ $client_id } ) {
 
-      foreach my $scope ( @{ $scopes_ref // [] } ) {
+        foreach my $scope ( @{ $scopes_ref // [] } ) {
 
-        if ( ! exists( $self->clients->{$client_id}{scopes}{$scope} ) ) {
-          return ( 0,'invalid_scope' );
-        } elsif ( ! $self->clients->{$client_id}{scopes}{$scope} ) {
-          return ( 0,'access_denied' );
+            if ( !exists( $self->clients->{ $client_id }{ scopes }{ $scope } ) ) {
+                return ( 0, 'invalid_scope' );
+            }
+            elsif ( !$self->clients->{ $client_id }{ scopes }{ $scope } ) {
+                return ( 0, 'access_denied' );
+            }
         }
-      }
 
-      return ( 1 );
-  }
+        return ( 1 );
+    }
 
-  return ( 0,'unauthorized_client' );
+    return ( 0, 'unauthorized_client' );
 }
 
 =head2 store_auth_code_cb
@@ -566,7 +575,7 @@ the verify_auth_code callback for verification:
     my ( %args ) = @_;
 
     my ( $obj,$auth_code,$client_id,$expires_in,$uri,$scopes_ref ) = @_;
-	  @args{qw/ mojo_controller auth_code client_id expires_in redirect_uri scopes / };
+        @args{qw/ mojo_controller auth_code client_id expires_in redirect_uri scopes / };
 
     my $auth_codes = $obj->db->get_collection( 'auth_codes' );
 
@@ -585,23 +594,23 @@ the verify_auth_code callback for verification:
 =cut
 
 sub _store_auth_code {
-  my ( $self,%args ) = @_;
+    my ( $self, %args ) = @_;
 
-  my ( $auth_code,$client_id,$expires_in,$uri,$scopes_ref ) =
-	@args{qw/ auth_code client_id expires_in redirect_uri scopes / };
+    my ( $auth_code, $client_id, $expires_in, $uri, $scopes_ref ) =
+        @args{ qw/ auth_code client_id expires_in redirect_uri scopes / };
 
-  return if $self->jwt_secret;
+    return if $self->jwt_secret;
 
-  $expires_in //= $self->auth_code_ttl;
+    $expires_in //= $self->auth_code_ttl;
 
-  $self->auth_codes->{$auth_code} = {
-    client_id     => $client_id,
-    expires       => time + $expires_in,
-    redirect_uri  => $uri,
-    scope         => $scopes_ref,
-  };
+    $self->auth_codes->{ $auth_code } = {
+        client_id    => $client_id,
+        expires      => time + $expires_in,
+        redirect_uri => $uri,
+        scope        => $scopes_ref,
+    };
 
-  return 1;
+    return 1;
 }
 
 =head2 verify_auth_code_cb
@@ -625,7 +634,7 @@ be a user identifier:
     my ( %args ) = @_;
 
     my ( $obj,$client_id,$client_secret,$auth_code,$uri )
-	  = @args{qw/ mojo_controller client_id client_secret auth_code redirect_uri / };
+        = @args{qw/ mojo_controller client_id client_secret auth_code redirect_uri / };
 
     my $auth_codes      = $obj->db->get_collection( 'auth_codes' );
     my $ac              = $auth_codes->find_one({
@@ -671,73 +680,73 @@ be a user identifier:
 =cut
 
 sub _verify_auth_code {
-  my ( $self,%args ) = @_;
+    my ( $self, %args ) = @_;
 
-  my ( $client_id,$client_secret,$auth_code,$uri )
-	= @args{qw/ client_id client_secret auth_code redirect_uri / };
+    my ( $client_id, $client_secret, $auth_code, $uri ) =
+        @args{ qw/ client_id client_secret auth_code redirect_uri / };
 
-  my $client = $self->clients->{$client_id}
-    || return ( 0,'unauthorized_client' );
+    my $client = $self->clients->{ $client_id }
+        || return ( 0, 'unauthorized_client' );
 
-  return $self->_verify_auth_code_jwt( %args ) if $self->jwt_secret;
+    return $self->_verify_auth_code_jwt( %args ) if $self->jwt_secret;
 
-  my ( $sec,$usec,$rand ) = split( '-',decode_base64( $auth_code ) );
+    my ( $sec, $usec, $rand ) = split( '-', decode_base64( $auth_code ) );
 
-  if (
-    ! exists( $self->auth_codes->{$auth_code} )
-    or ! exists( $self->clients->{$client_id} )
-    or ( $client_secret ne $self->clients->{$client_id}{client_secret} )
-    or $self->auth_codes->{$auth_code}{access_token}
-    or ( $uri && $self->auth_codes->{$auth_code}{redirect_uri} ne $uri )
-    or ( $self->auth_codes->{$auth_code}{expires} <= time )
-  ) {
+    if (   !exists( $self->auth_codes->{ $auth_code } )
+        or !exists( $self->clients->{ $client_id } )
+        or ( $client_secret ne $self->clients->{ $client_id }{ client_secret } )
+        or $self->auth_codes->{ $auth_code }{ access_token }
+        or ( $uri && $self->auth_codes->{ $auth_code }{ redirect_uri } ne $uri )
+        or ( $self->auth_codes->{ $auth_code }{ expires } <= time ) )
+    {
 
-    if ( my $access_token = $self->auth_codes->{$auth_code}{access_token} ) {
-      # this auth code has already been used to generate an access token
-      # so we need to revoke the access token that was previously generated
-      $self->_revoke_access_token( $access_token );
+        if ( my $access_token = $self->auth_codes->{ $auth_code }{ access_token } ) {
+
+            # this auth code has already been used to generate an access token
+            # so we need to revoke the access token that was previously generated
+            $self->_revoke_access_token( $access_token );
+        }
+
+        return ( 0, 'invalid_grant' );
     }
-
-    return ( 0,'invalid_grant' );
-  } else {
-    return ( 1,undef,$self->auth_codes->{$auth_code}{scope} );
-  }
+    else {
+        return ( 1, undef, $self->auth_codes->{ $auth_code }{ scope } );
+    }
 
 }
 
 sub _verify_auth_code_jwt {
-  my ( $self,%args ) = @_;
+    my ( $self, %args ) = @_;
 
-  my ( $client_id,$client_secret,$auth_code,$uri )
-	= @args{qw/ client_id client_secret auth_code redirect_uri / };
+    my ( $client_id, $client_secret, $auth_code, $uri ) =
+        @args{ qw/ client_id client_secret auth_code redirect_uri / };
 
-  my $client = $self->clients->{$client_id}
-    || return ( 0,'unauthorized_client' );
+    my $client = $self->clients->{ $client_id }
+        || return ( 0, 'unauthorized_client' );
 
-  return ( 0,'invalid_grant' )
-    if ( $client_secret ne $client->{client_secret} );
+    return ( 0, 'invalid_grant' )
+        if ( $client_secret ne $client->{ client_secret } );
 
-  my $auth_code_payload;
+    my $auth_code_payload;
 
-  try {
-    $auth_code_payload = Mojo::JWT->new( secret => $self->jwt_secret )
-      ->decode( $auth_code );
-  } catch {
-    return ( 0,'invalid_grant' );
-  };
+    try {
+        $auth_code_payload = Mojo::JWT->new( secret => $self->jwt_secret )->decode( $auth_code );
+    }
+    catch {
+        return ( 0, 'invalid_grant' );
+    };
 
-  if (
-    ! $auth_code_payload
-    or $auth_code_payload->{type} ne 'auth'
-    or $auth_code_payload->{client} ne $client_id
-    or ( $uri && $auth_code_payload->{aud} ne $uri )
-  ) {
-    return ( 0,'invalid_grant' );
-  }
+    if (  !$auth_code_payload
+        or $auth_code_payload->{ type } ne 'auth'
+        or $auth_code_payload->{ client } ne $client_id
+        or ( $uri && $auth_code_payload->{ aud } ne $uri ) )
+    {
+        return ( 0, 'invalid_grant' );
+    }
 
-  my $scope = $auth_code_payload->{scopes};
+    my $scope = $auth_code_payload->{ scopes };
 
-  return ( $client_id,undef,$scope );
+    return ( $client_id, undef, $scope );
 }
 
 =head2 store_access_token_cb
@@ -834,53 +843,53 @@ the verify_access_token callback for verification:
 =cut
 
 sub _store_access_token {
-  my ( $self,%args ) = @_;
+    my ( $self, %args ) = @_;
 
-  my (
-    $c_id,$auth_code,$access_token,$refresh_token,
-    $expires_in,$scope,$old_refresh_token
-  ) = @args{qw/ client_id auth_code access_token refresh_token expires_in scopes old_refresh_token / };
+    my ( $c_id, $auth_code, $access_token, $refresh_token, $expires_in, $scope, $old_refresh_token )
+        = @args{
+        qw/ client_id auth_code access_token refresh_token expires_in scopes old_refresh_token / };
 
-  $expires_in //= $self->access_token_ttl;
+    $expires_in //= $self->access_token_ttl;
 
-  return if $self->jwt_secret;
+    return if $self->jwt_secret;
 
-  if ( ! defined( $auth_code ) && $old_refresh_token ) {
-    # must have generated an access token via a refresh token so revoke the old
-    # access token and refresh token and update the AUTH_CODES hash to store the
-    # new one (also copy across scopes if missing)
-    $auth_code = $self->refresh_tokens->{$old_refresh_token}{auth_code};
+    if ( !defined( $auth_code ) && $old_refresh_token ) {
 
-    my $prev_access_token = $self->refresh_tokens->{$old_refresh_token}{access_token};
+        # must have generated an access token via a refresh token so revoke the old
+        # access token and refresh token and update the AUTH_CODES hash to store the
+        # new one (also copy across scopes if missing)
+        $auth_code = $self->refresh_tokens->{ $old_refresh_token }{ auth_code };
 
-    # access tokens can be revoked, whilst refresh tokens can remain so we
-    # need to get the data from the refresh token as the access token may
-    # no longer exist at the point that the refresh token is used
-    $scope //= $self->refresh_tokens->{$old_refresh_token}{scope};
+        my $prev_access_token = $self->refresh_tokens->{ $old_refresh_token }{ access_token };
 
-    $self->_revoke_access_token( $prev_access_token );
-  }
+        # access tokens can be revoked, whilst refresh tokens can remain so we
+        # need to get the data from the refresh token as the access token may
+        # no longer exist at the point that the refresh token is used
+        $scope //= $self->refresh_tokens->{ $old_refresh_token }{ scope };
 
-  delete( $self->refresh_tokens->{$old_refresh_token} )
-    if $old_refresh_token;
+        $self->_revoke_access_token( $prev_access_token );
+    }
 
-  $self->access_tokens->{$access_token} = {
-    scope         => $scope,
-    expires       => time + $expires_in,
-    refresh_token => $refresh_token,
-    client_id     => $c_id,
-  };
+    delete( $self->refresh_tokens->{ $old_refresh_token } )
+        if $old_refresh_token;
 
-  $self->refresh_tokens->{$refresh_token} = {
-    scope         => $scope,
-    client_id     => $c_id,
-    access_token  => $access_token,
-    auth_code     => $auth_code,
-  };
+    $self->access_tokens->{ $access_token } = {
+        scope         => $scope,
+        expires       => time + $expires_in,
+        refresh_token => $refresh_token,
+        client_id     => $c_id,
+    };
 
-  $self->auth_codes->{$auth_code}{access_token} = $access_token;
+    $self->refresh_tokens->{ $refresh_token } = {
+        scope        => $scope,
+        client_id    => $c_id,
+        access_token => $access_token,
+        auth_code    => $auth_code,
+    };
 
-  return $c_id;
+    $self->auth_codes->{ $auth_code }{ access_token } = $access_token;
+
+    return $c_id;
 }
 
 =head2 verify_access_token_cb
@@ -959,128 +968,131 @@ message (almost certainly 'invalid_grant' in this case)
 =cut
 
 sub _verify_access_token {
-  my ( $self,%args ) = @_;
-  return $self->_verify_access_token_jwt( %args ) if $self->jwt_secret;
+    my ( $self, %args ) = @_;
+    return $self->_verify_access_token_jwt( %args ) if $self->jwt_secret;
 
-  my ( $a_token,$scopes_ref,$is_refresh_token )
-	= @args{qw/ access_token scopes is_refresh_token /};
+    my ( $a_token, $scopes_ref, $is_refresh_token ) =
+        @args{ qw/ access_token scopes is_refresh_token / };
 
-  if (
-    $is_refresh_token
-    && exists( $self->refresh_tokens->{$a_token} )
-  ) {
+    if ( $is_refresh_token
+        && exists( $self->refresh_tokens->{ $a_token } ) )
+    {
 
-    if ( $scopes_ref ) {
-      foreach my $scope ( @{ $scopes_ref // [] } ) {
-        return ( 0,'invalid_grant' )
-          if !$self->_has_scope( $scope,$self->refresh_tokens->{$a_token}{scope} );
-      }
+        if ( $scopes_ref ) {
+            foreach my $scope ( @{ $scopes_ref // [] } ) {
+                return ( 0, 'invalid_grant' )
+                    if !$self->_has_scope( $scope, $self->refresh_tokens->{ $a_token }{ scope } );
+            }
+        }
+
+        return ( $self->refresh_tokens->{ $a_token }{ client_id }, undef );
+    }
+    elsif ( exists( $self->access_tokens->{ $a_token } ) ) {
+
+        if ( $self->access_tokens->{ $a_token }{ expires } <= time ) {
+            $self->_revoke_access_token( $a_token );
+            return ( 0, 'invalid_grant' );
+        }
+        elsif ( $scopes_ref ) {
+
+            foreach my $scope ( @{ $scopes_ref // [] } ) {
+                return ( 0, 'invalid_grant' )
+                    if !$self->_has_scope( $scope, $self->access_tokens->{ $a_token }{ scope } );
+            }
+
+        }
+
+        return ( $self->access_tokens->{ $a_token }{ client_id }, undef );
     }
 
-    return ( $self->refresh_tokens->{$a_token}{client_id},undef );
-  }
-  elsif ( exists( $self->access_tokens->{$a_token} ) ) {
-
-    if ( $self->access_tokens->{$a_token}{expires} <= time ) {
-      $self->_revoke_access_token( $a_token );
-      return ( 0,'invalid_grant' )
-    } elsif ( $scopes_ref ) {
-
-      foreach my $scope ( @{ $scopes_ref // [] } ) {
-        return ( 0,'invalid_grant' )
-          if !$self->_has_scope( $scope,$self->access_tokens->{$a_token}{scope} );
-      }
-
-    }
-
-    return ( $self->access_tokens->{$a_token}{client_id},undef );
-  }
-
-  return ( 0,'invalid_grant' )
+    return ( 0, 'invalid_grant' );
 }
 
 sub _has_scope {
-	my ( $self,$scope,$available_scopes ) = @_;
-	return scalar grep { $_ eq $scope } @{ $available_scopes // [] };
+    my ( $self, $scope, $available_scopes ) = @_;
+    return scalar grep { $_ eq $scope } @{ $available_scopes // [] };
 }
 
 sub _verify_access_token_jwt {
-  my ( $self,%args ) = @_;
+    my ( $self, %args ) = @_;
 
-  my ( $access_token,$scopes_ref,$is_refresh_token )
-	= @args{qw/ access_token scopes is_refresh_token /};
+    my ( $access_token, $scopes_ref, $is_refresh_token ) =
+        @args{ qw/ access_token scopes is_refresh_token / };
 
-  my $access_token_payload;
+    my $access_token_payload;
 
-  try {
-    $access_token_payload = Mojo::JWT->new( secret => $self->jwt_secret )
-      ->decode( $access_token );
-  } catch {
-    return ( 0,'invalid_grant' );
-  };
+    try {
+        $access_token_payload =
+            Mojo::JWT->new( secret => $self->jwt_secret )->decode( $access_token );
+    }
+    catch {
+        return ( 0, 'invalid_grant' );
+    };
 
-  if (
-    $access_token_payload
-    && (
-      $access_token_payload->{type} eq 'access'
-      || $is_refresh_token && $access_token_payload->{type} eq 'refresh'
-    )
-  ) {
+    if (
+        $access_token_payload
+        && (   $access_token_payload->{ type } eq 'access'
+            || $is_refresh_token && $access_token_payload->{ type } eq 'refresh' )
+        )
+    {
 
-    if ( $scopes_ref ) {
-      foreach my $scope ( @{ $scopes_ref // [] } ) {
-        return ( 0,'invalid_grant' )
-          if !$self->_has_scope( $scope,$access_token_payload->{scopes} );
-      }
+        if ( $scopes_ref ) {
+            foreach my $scope ( @{ $scopes_ref // [] } ) {
+                return ( 0, 'invalid_grant' )
+                    if !$self->_has_scope( $scope, $access_token_payload->{ scopes } );
+            }
+        }
+
+        return ( $access_token_payload, undef );
     }
 
-    return ( $access_token_payload,undef );
-  }
-
-  return ( 0,'invalid_grant' );
+    return ( 0, 'invalid_grant' );
 }
 
 sub _revoke_access_token {
-  my ( $self,$access_token ) = @_;
-  delete( $self->access_tokens->{$access_token} );
+    my ( $self, $access_token ) = @_;
+    delete( $self->access_tokens->{ $access_token } );
 }
 
 sub token {
-  my ( $self,%args ) = @_;
+    my ( $self, %args ) = @_;
 
-  my ( $client_id,$scopes,$type,$redirect_uri,$user_id )
-	= @args{qw/ client_id scopes type redirect_uri user_id / };
+    my ( $client_id, $scopes, $type, $redirect_uri, $user_id ) =
+        @args{ qw/ client_id scopes type redirect_uri user_id / };
 
-  my $ttl = $type eq 'auth' ? $self->auth_code_ttl : $self->access_token_ttl;
-  undef( $ttl ) if $type eq 'refresh';
-  my $code;
+    my $ttl = $type eq 'auth' ? $self->auth_code_ttl : $self->access_token_ttl;
+    undef( $ttl ) if $type eq 'refresh';
+    my $code;
 
-  if ( ! $self->jwt_secret ) {
-    my ( $sec,$usec ) = gettimeofday;
-    $code = encode_base64( join( '-',$sec,$usec,rand(),random_string(30) ),'' );
-  } else {
-    $code = Mojo::JWT->new(
-      ( $ttl ? ( expires => time + $ttl ) : () ),
-      secret  => $self->jwt_secret,
-      set_iat => 1,
-      # https://tools.ietf.org/html/rfc7519#section-4
-      claims  => {
-        # Registered Claim Names
+    if ( !$self->jwt_secret ) {
+        my ( $sec, $usec ) = gettimeofday;
+        $code = encode_base64( join( '-', $sec, $usec, rand(), random_string( 30 ) ), '' );
+    }
+    else {
+        $code = Mojo::JWT->new(
+            ( $ttl ? ( expires => time + $ttl ) : () ),
+            secret  => $self->jwt_secret,
+            set_iat => 1,
+
+            # https://tools.ietf.org/html/rfc7519#section-4
+            claims => {
+
+                # Registered Claim Names
 #        iss    => undef, # us, the auth server / application
 #        sub    => undef, # the logged in user
-        aud    => $redirect_uri, # the "audience"
-        jti    => random_string(32),
+                aud => $redirect_uri,         # the "audience"
+                jti => random_string( 32 ),
 
-        # Private Claim Names
-        user_id      => $user_id,
-        client       => $client_id,
-        type         => $type,
-        scopes       => $scopes,
-      },
-    )->encode;
-  }
+                # Private Claim Names
+                user_id => $user_id,
+                client  => $client_id,
+                type    => $type,
+                scopes  => $scopes,
+            },
+        )->encode;
+    }
 
-  return $code;
+    return $code;
 }
 
 =head1 PUTTING IT ALL TOGETHER
