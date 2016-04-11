@@ -1101,13 +1101,23 @@ Having defined the above callbacks, customized to your app/data store/etc, you
 can configuration the module:
 
   my $Grant = Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant->new(
-    login_resource_owner      => $resource_owner_logged_in_sub,
-    confirm_by_resource_owner => $resource_owner_confirm_scopes_sub,
-    verify_client             => $verify_client_sub,
-    store_auth_code           => $store_auth_code_sub,
-    verify_auth_code          => $verify_auth_code_sub,
-    store_access_token        => $store_access_token_sub,
-    verify_access_token       => $verify_access_token_sub,
+    clients => {
+      TrendyNewService => {
+        client_secret => 'TopSecretClientSecret',
+        scopes        => {
+          post_images   => 1,
+          annoy_friends => 1,
+        },
+      },
+      ...
+    }
+    login_resource_owner_cb      => $resource_owner_logged_in_sub,
+    confirm_by_resource_owner_cb => $resource_owner_confirm_scopes_sub,
+    verify_client_cb             => $verify_client_sub,
+    store_auth_code_cb           => $store_auth_code_sub,
+    verify_auth_code_cb          => $verify_auth_code_sub,
+    store_access_token_cb        => $store_access_token_sub,
+    verify_access_token_cb       => $verify_access_token_sub,
   );
 
 =head1 EXAMPLES
