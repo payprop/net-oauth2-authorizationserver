@@ -599,7 +599,7 @@ sub _store_auth_code {
     my ( $auth_code, $client_id, $expires_in, $uri, $scopes_ref ) =
         @args{ qw/ auth_code client_id expires_in redirect_uri scopes / };
 
-    return if $self->jwt_secret;
+    return 1 if $self->jwt_secret;
 
     $expires_in //= $self->auth_code_ttl;
 
@@ -851,7 +851,7 @@ sub _store_access_token {
 
     $expires_in //= $self->access_token_ttl;
 
-    return if $self->jwt_secret;
+    return 1 if $self->jwt_secret;
 
     if ( !defined( $auth_code ) && $old_refresh_token ) {
 

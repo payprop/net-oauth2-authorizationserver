@@ -37,7 +37,7 @@ WriteMakefile(
     },
   },
   test => {
-    TESTS => 't/*.t',
+    RECURSIVE_TEST_FILES => 1,
   },
 );
 

@@ -10,6 +10,7 @@ t/net/oauth2/authorizationserver.t
 t/net/oauth2/authorizationserver/authorizationcodegrant.t
 t/net/oauth2/authorizationserver/authorizationcodegrant_no_jwt.t
 t/net/oauth2/authorizationserver/authorizationcodegrant_legacy_args.t
+t/net/oauth2/authorizationserver/authorizationcodegrant_tests.pm
 examples/README
 examples/oauth2_client.pl
 examples/oauth2_db.json
