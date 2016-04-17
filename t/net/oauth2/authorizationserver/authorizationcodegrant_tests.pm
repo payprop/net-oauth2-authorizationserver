@@ -160,7 +160,7 @@ sub run_tests {
 		access_token  => $access_token,
 		refresh_token => $refresh_token,
 		scopes       => [ qw/ eat sleep / ],
-	),'->store_auth_code' );
+	),'->store_access_token' );
 
 	note( "verify_access_token" );
 

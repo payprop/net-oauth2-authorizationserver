@@ -11,7 +11,7 @@ Authorization Server
 
 # VERSION
 
-0.03
+0.04
 
 # SYNOPSIS
 
@@ -24,9 +24,15 @@ Authorization Server
 # DESCRIPTION
 
 This module is the gateway to the various OAuth2 grant flows, as documented
-at [https://tools.ietf.org/html/rfc6749](https://tools.ietf.org/html/rfc6749). You should see the various modules
-within this distribution for the implementation and usage details on various
-types of grant flows.
+at [https://tools.ietf.org/html/rfc6749](https://tools.ietf.org/html/rfc6749). Each module implements a specific
+grant flow and is designed to "just work" with minimal detail and effort.
+
+Please see [Net::OAuth2::AuthorizationServer::Manual](https://metacpan.org/pod/Net::OAuth2::AuthorizationServer::Manual) for more information
+on how to use this module and the various grant types. You should use the manual
+in conjunction with the grant type module you are using to understand how to
+override the defaults if the "just work" mode isn't good enough for you.
+
+# GRANT TYPES
 
 ## auth\_code\_grant
 
@@ -36,27 +42,27 @@ See [Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant](https://metacpan.
 
 ## implicit\_grant
 
-## resource\_owner\_password\_grant
+Not yet implemented.
+
+## password\_grant
+
+OAuth Resource Owner Password Grant as document at [http://tools.ietf.org/html/rfc6749#section-4.3](http://tools.ietf.org/html/rfc6749#section-4.3).
+
+See [Net::OAuth2::AuthorizationServer::PasswordGrant](https://metacpan.org/pod/Net::OAuth2::AuthorizationServer::PasswordGrant).
 
 ## client\_grant
+
+Not yet implemented.
 
 ## extension\_grant
 
 Not yet implemented.
 
-# EXAMPLES
-
-There are examples included with this distribution in the examples/ dir.
-See examples/README for more information about these examples.
-
-# REFERENCES
-
-- [http://oauth.net/documentation/](http://oauth.net/documentation/)
-- [http://tools.ietf.org/html/rfc6749](http://tools.ietf.org/html/rfc6749)
-
 # SEE ALSO
 
 [Mojolicious::Plugin::OAuth2::Server](https://metacpan.org/pod/Mojolicious::Plugin::OAuth2::Server) - A Mojolicious plugin using this module
+
+[Mojo::JWT](https://metacpan.org/pod/Mojo::JWT) - encode/decode JWTs
 
 # AUTHOR
 
