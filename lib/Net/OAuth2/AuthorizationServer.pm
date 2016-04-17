@@ -7,7 +7,7 @@ Authorization Server
 
 =for html
 <a href='https://travis-ci.org/G3S/net-oauth2-authorizationserver?branch=master'><img src='https://travis-ci.org/G3S/net-oauth2-authorizationserver.svg?branch=master' alt='Build Status' /></a>
-<a href='https://coveralls.io/r/G3S/net-oauth2-authorizationserver?branch=master'><img src='https://coveralls.io/repos/G3S/net-oauth2-authorizationserver/badge.png?branch=master' alt='Coverage Status' /></a>
+<a href='https://coveralls.io/github/G3S/net-oauth2-authorizationserver?branch=master'><img src='https://coveralls.io/repos/github/G3S/net-oauth2-authorizationserver/badge.svg?branch=master' alt='Coverage Status' /></a>
 
 =head1 VERSION
 
