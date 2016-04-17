@@ -27,3 +27,4 @@ t/net/oauth2/authorizationserver/passwordgrant.t
 t/net/oauth2/authorizationserver/passwordgrant_legacy_args.t
 t/net/oauth2/authorizationserver/passwordgrant_no_jwt.t
 t/net/oauth2/authorizationserver/passwordgrant_tests.pm
+t/net/oauth2/authorizationserver/defaults.t
