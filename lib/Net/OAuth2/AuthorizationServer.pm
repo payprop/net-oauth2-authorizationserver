@@ -11,7 +11,7 @@ Authorization Server
 
 =head1 VERSION
 
-0.04
+0.05
 
 =head1 SYNOPSIS
 
@@ -41,8 +41,9 @@ use Moo;
 use Types::Standard qw/ :all /;
 
 use Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant;
+use Net::OAuth2::AuthorizationServer::PasswordGrant;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 =head1 GRANT TYPES
 
@@ -68,6 +69,13 @@ Not yet implemented.
 OAuth Resource Owner Password Grant as document at L<http://tools.ietf.org/html/rfc6749#section-4.3>.
 
 See L<Net::OAuth2::AuthorizationServer::PasswordGrant>.
+
+=cut
+
+sub password_grant {
+    my ( $self, @args ) = @_;
+    return Net::OAuth2::AuthorizationServer::PasswordGrant->new( @args, );
+}
 
 =head2 client_grant
 

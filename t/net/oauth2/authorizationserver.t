@@ -17,6 +17,7 @@ can_ok(
     $Server,
     qw/
 		auth_code_grant
+		password_grant
 	/
 );
 
@@ -25,6 +26,13 @@ isa_ok(
 		clients => { foo => {} },
     ),
     'Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant'
+);
+
+isa_ok(
+    $Grant = $Server->password_grant(
+		clients => { foo => {} },
+    ),
+    'Net::OAuth2::AuthorizationServer::PasswordGrant'
 );
 
 done_testing();
