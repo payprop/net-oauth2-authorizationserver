@@ -1,5 +1,9 @@
 Revision history for Net-OAuth2-AuthorizationServer
 
+0.04     2016-04-17
+        - Add Net::OAuth2::AuthorizationServer::PasswordGrant
+        - Add Net::OAuth2::AuthorizationServer::Manual
+
 0.03     2016-04-11
         - First release, broken out of Mojolicious::Plugin::OAuth2::Server
           for better abstraction and decoupling from the Mojolicious framework.

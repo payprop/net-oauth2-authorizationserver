@@ -11,7 +11,7 @@ Authorization Server
 
 =head1 VERSION
 
-0.03
+0.04
 
 =head1 SYNOPSIS
 
@@ -24,9 +24,13 @@ Authorization Server
 =head1 DESCRIPTION
 
 This module is the gateway to the various OAuth2 grant flows, as documented
-at L<https://tools.ietf.org/html/rfc6749>. You should see the various modules
-within this distribution for the implementation and usage details on various
-types of grant flows.
+at L<https://tools.ietf.org/html/rfc6749>. Each module implements a specific
+grant flow and is designed to "just work" with minimal detail and effort.
+
+Please see L<Net::OAuth2::AuthorizationServer::Manual> for more information
+on how to use this module and the various grant types. You should use the manual
+in conjunction with the grant type module you are using to understand how to
+override the defaults if the "just work" mode isn't good enough for you.
 
 =cut
 
@@ -38,7 +42,9 @@ use Types::Standard qw/ :all /;
 
 use Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
+
+=head1 GRANT TYPES
 
 =head2 auth_code_grant
 
@@ -55,34 +61,27 @@ sub auth_code_grant {
 
 =head2 implicit_grant
 
-=head2 resource_owner_password_grant
+Not yet implemented.
+
+=head2 password_grant
+
+OAuth Resource Owner Password Grant as document at L<http://tools.ietf.org/html/rfc6749#section-4.3>.
+
+See L<Net::OAuth2::AuthorizationServer::PasswordGrant>.
 
 =head2 client_grant
+
+Not yet implemented.
 
 =head2 extension_grant
 
 Not yet implemented.
 
-=cut
-
-=head1 EXAMPLES
-
-There are examples included with this distribution in the examples/ dir.
-See examples/README for more information about these examples.
-
-=head1 REFERENCES
-
-=over 4
-
-=item * L<http://oauth.net/documentation/>
-
-=item * L<http://tools.ietf.org/html/rfc6749>
-
-=back
-
 =head1 SEE ALSO
 
 L<Mojolicious::Plugin::OAuth2::Server> - A Mojolicious plugin using this module
+
+L<Mojo::JWT> - encode/decode JWTs
 
 =head1 AUTHOR
 
