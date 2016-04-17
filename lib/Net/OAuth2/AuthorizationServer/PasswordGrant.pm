@@ -175,7 +175,7 @@ sub _verify_user_password {
         return ( 0, 'invalid_grant' );
     }
     else {
-        return ( 1, undef, $scopes );
+        return ( $client_id, undef, $scopes, $username );
     }
 
 }

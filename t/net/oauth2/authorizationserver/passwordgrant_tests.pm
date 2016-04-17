@@ -53,9 +53,10 @@ sub run_tests {
 		scopes        => [ qw/ eat sleep / ],
 	);
 
-	my ( $client,$vac_error,$scopes ) = $Grant->verify_user_password( %valid_user_password );
+	my ( $og_client,$vac_error,$scopes,$user_id )
+		= $Grant->verify_user_password( %valid_user_password );
 
-	ok( $client,'->verify_user_password, correct args' );
+	ok( $og_client,'->verify_user_password, correct args' );
 	ok( ! $vac_error,'has no error' );
 	cmp_deeply( $scopes,[ qw/ eat sleep / ],'has scopes' );
 
@@ -65,7 +66,7 @@ sub run_tests {
 		[ { username => 'i_do_not_exist' },'invalid_grant','bad username' ],
 		[ { password => 'bad_password' },'invalid_grant','bad password' ],
 	) {
-		( $client,$vac_error,$scopes ) = $Grant->verify_user_password(
+		my ( $client,$vac_error,$scopes ) = $Grant->verify_user_password(
 			%valid_user_password,%{ $t->[0] },
 		);
 
@@ -74,30 +75,32 @@ sub run_tests {
 		ok( ! $scopes,'has no scopes' );
 	}
 
+	my $client = $og_client;
+
 	note( "store_access_token" );
 
 	ok( my $access_token = $Grant->token(
-		client_id    => 'test_client',
+		client_id    => $client,
 		scopes       => [ qw/ eat sleep / ],
 		type         => 'access',
-		user_id      => 1,
+		user_id      => $user_id,
 	),'->token (access token)' );
 
 	$args->{token_format_tests}->( $access_token,'access' )
 		if $args->{token_format_tests};
 
 	ok( my $refresh_token = $Grant->token(
-		client_id    => 'test_client',
+		client_id    => $client,
 		scopes       => [ qw/ eat sleep / ],
 		type         => 'refresh',
-		user_id      => 1,
+		user_id      => $user_id,
 	),'->token (refresh token)' );
 
 	$args->{token_format_tests}->( $refresh_token,'refresh' )
 		if $args->{token_format_tests};
 
 	ok( $Grant->store_access_token(
-		client_id     => 'test_client',
+		client_id     => $client,
 		access_token  => $access_token,
 		refresh_token => $refresh_token,
 		scopes       => [ qw/ eat sleep / ],

@@ -89,7 +89,7 @@ sub token_format_tests {
 				'sleep'
 			],
 			'type' => $type,
-			'user_id' => 1
+			'user_id' => 'test_user',
 		},
 		'auth code decodes correctly',
 	);
