@@ -590,6 +590,6 @@ This library is free software; you can redistribute it and/or modify it under
 the same terms as Perl itself. If you would like to contribute documentation
 or file a bug report then please raise an issue / pull request:
 
-    https://github.com/G3S/net-oauth2-authorizationserver
+    https://github.com/Humanstate/net-oauth2-authorizationserver
 
 =cut

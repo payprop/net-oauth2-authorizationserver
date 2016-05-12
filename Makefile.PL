@@ -32,8 +32,8 @@ WriteMakefile(
     resources => {
       license    => 'http://dev.perl.org/licenses/',
       homepage   => 'https://metacpan.org/module/Net::OAuth2::AuthorizationServer',
-      bugtracker => 'https://github.com/G3S/net-oauth2-authorizationserver/issues',
-      repository => 'https://github.com/G3S/net-oauth2-authorizationserver'
+      bugtracker => 'https://github.com/Humanstate/net-oauth2-authorizationserver/issues',
+      repository => 'https://github.com/Humanstate/net-oauth2-authorizationserver'
     },
   },
   test => {
