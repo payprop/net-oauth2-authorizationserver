@@ -35,4 +35,11 @@ isa_ok(
     'Net::OAuth2::AuthorizationServer::PasswordGrant'
 );
 
+isa_ok(
+    $Grant = $Server->implicit_grant(
+		clients => { foo => {} },
+    ),
+    'Net::OAuth2::AuthorizationServer::ImplicitGrant'
+);
+
 done_testing();
