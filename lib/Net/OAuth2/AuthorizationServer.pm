@@ -11,7 +11,7 @@ Authorization Server
 
 =head1 VERSION
 
-0.07
+0.08
 
 =head1 SYNOPSIS
 
@@ -41,9 +41,10 @@ use Moo;
 use Types::Standard qw/ :all /;
 
 use Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant;
+use Net::OAuth2::AuthorizationServer::ImplicitGrant;
 use Net::OAuth2::AuthorizationServer::PasswordGrant;
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 =head1 GRANT TYPES
 
@@ -57,12 +58,21 @@ See L<Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant>.
 
 sub auth_code_grant {
     my ( $self, @args ) = @_;
-    return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant->new( @args, );
+    return Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant->new( @args );
 }
 
 =head2 implicit_grant
 
-Not yet implemented.
+OAuth Implicit Grant as document at L<https://tools.ietf.org/html/rfc6749#section-4.2>.
+
+See L<Net::OAuth2::AuthorizationServer::ImplicitGrant>.
+
+=cut
+
+sub implicit_grant {
+    my ( $self, @args ) = @_;
+    return Net::OAuth2::AuthorizationServer::ImplicitGrant->new( @args );
+}
 
 =head2 password_grant
 
@@ -74,7 +84,7 @@ See L<Net::OAuth2::AuthorizationServer::PasswordGrant>.
 
 sub password_grant {
     my ( $self, @args ) = @_;
-    return Net::OAuth2::AuthorizationServer::PasswordGrant->new( @args, );
+    return Net::OAuth2::AuthorizationServer::PasswordGrant->new( @args );
 }
 
 =head2 client_grant

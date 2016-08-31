@@ -11,7 +11,7 @@ Authorization Server
 
 # VERSION
 
-0.07
+0.08
 
 # SYNOPSIS
 
@@ -42,7 +42,9 @@ See [Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant](https://metacpan.
 
 ## implicit\_grant
 
-Not yet implemented.
+OAuth Implicit Grant as document at [https://tools.ietf.org/html/rfc6749#section-4.2](https://tools.ietf.org/html/rfc6749#section-4.2).
+
+See [Net::OAuth2::AuthorizationServer::ImplicitGrant](https://metacpan.org/pod/Net::OAuth2::AuthorizationServer::ImplicitGrant).
 
 ## password\_grant
 

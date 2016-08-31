@@ -102,9 +102,9 @@ The validity period of the generated authorization code in seconds. Defaults to
 
 The following callbacks are supported by this grant type:
 
+  verify_client_cb
   login_resource_owner_cb
   confirm_by_resource_owner_cb
-  verify_client_cb
   store_auth_code_cb
   verify_auth_code_cb
   store_access_token_cb

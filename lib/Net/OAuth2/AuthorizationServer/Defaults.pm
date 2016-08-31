@@ -135,7 +135,7 @@ sub _delegate_to_cb_or_private {
             for ( $method ) {
 
                 /login_resource_owner|confirm_by_resource_owner|verify_client/ && do {
-                    return $cb->( $obj, @args{ qw/ client_id scopes / } );
+                    return $cb->( $obj, @args{ qw/ client_id scopes redirect_uri / } );
                 };
 
 				$self->_uses_user_passwords && /verify_user_password/ && do {
@@ -240,16 +240,19 @@ sub _store_access_token {
     $self->access_tokens->{ $access_token } = {
         scope         => $scope,
         expires       => time + $expires_in,
-        refresh_token => $refresh_token,
+        refresh_token => $refresh_token // undef,
         client_id     => $c_id,
     };
 
-    $self->refresh_tokens->{ $refresh_token } = {
-        scope        => $scope,
-        client_id    => $c_id,
-        access_token => $access_token,
-        ( $self->_uses_auth_codes ? ( auth_code => $auth_code ) : () ),
-    };
+	if ( $refresh_token ) {
+
+		$self->refresh_tokens->{ $refresh_token } = {
+			scope        => $scope,
+			client_id    => $c_id,
+			access_token => $access_token,
+			( $self->_uses_auth_codes ? ( auth_code => $auth_code ) : () ),
+		};
+	}
 
 	if ( $self->_uses_auth_codes ) {
     	$self->auth_codes->{ $auth_code }{ access_token } = $access_token;

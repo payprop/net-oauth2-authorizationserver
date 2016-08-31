@@ -14,6 +14,13 @@ plugin 'OAuth2::Server' => {
         "annoy_friends" => 1,
       },
     },
+    TrendyNewServiceImplicitGrant => {
+      redirect_uri => 'https://localhost/cb',
+      scopes        => {
+        "post_images" => 1,
+        "annoy_friends" => 1,
+      },
+    },
   },
 };
 
