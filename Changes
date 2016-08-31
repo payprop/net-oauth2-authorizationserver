@@ -1,5 +1,11 @@
 Revision history for Net-OAuth2-AuthorizationServer
 
+0.09     2016-08-31
+        - Fix clients with a client_secret must use Authorization Code
+          flow and not Implicit Grant flow
+        - Fix pass redirect_uri and response_type to verify_client cb
+          so correct validation can be done for above fix
+
 0.08     2016-08-31
         - Add Net::OAuth2::AuthorizationServer::ImplicitGrant
 

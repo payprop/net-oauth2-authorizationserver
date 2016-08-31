@@ -32,6 +32,9 @@ A hashref of client details keyed like so:
 
   clients => {
     $client_id => {
+      # note that setting a client_secret implies the "Authorization Code Grant"
+      # if this is not set then "Implicit Grant" is implied (that has an optional
+      # redirect_uri parameter)
       client_secret => $client_secret
       scopes        => {
         eat       => 1,
@@ -93,8 +96,8 @@ it should call the redirect_to method on the controller and return undef:
   my $resource_owner_confirm_scopes_sub = sub {
     my ( %args ) = @_;
 
-    my ( $obj,$client_id,$scopes_ref )
-        = @args{ qw/ mojo_controller client_id scopes / };
+    my ( $obj,$client_id,$scopes_ref,$redirect_uri,$response_type )
+        = @args{ qw/ mojo_controller client_id scopes redirect_uri response_type / };
 
     my $is_allowed = $obj->flash( "oauth_${client_id}" );
 
@@ -169,8 +172,8 @@ element should be the error message in the case of the client being disallowed:
   my $verify_client_sub = sub {
     my ( %args ) = @_;
 
-    my ( $obj,$client_id,$scopes_ref )
-        = @args{ qw/ mojo_controller client_id scopes / };
+    my ( $obj,$client_id,$scopes_ref,$redirect_uri,$response_type )
+        = @args{ qw/ mojo_controller client_id scopes redirect_uri response_type / };
 
     if (
       my $client = $obj->db->get_collection( 'clients' )

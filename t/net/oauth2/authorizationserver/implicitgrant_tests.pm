@@ -33,6 +33,14 @@ sub clients {
 				sleep => 1,
 			},
 		},
+		test_client_must_use_auth_code => {
+			client_secret => 'weeee',
+			scopes => {
+				eat   => 1,
+				drink => 0,
+				sleep => 1,
+			},
+		},
 	};
 }
 
@@ -51,11 +59,21 @@ sub run_tests {
 	note( "verify_client" );
 
 	my %invalid_client = (
-		client_id => 'test_client_with_redirect_uri',
+		client_id => 'test_client_must_use_auth_code',
 		scopes    => [ qw/ eat sleep / ],
 	);
 
 	my ( $res,$error ) = $Grant->verify_client( %invalid_client );
+
+	ok( ! $res,'->verify_client, client cannot use implicit grant' );
+	is( $error,'unauthorized_client','has error' );
+
+	%invalid_client = (
+		client_id => 'test_client_with_redirect_uri',
+		scopes    => [ qw/ eat sleep / ],
+	);
+
+	( $res,$error ) = $Grant->verify_client( %invalid_client );
 
 	ok( ! $res,'->verify_client, lacks redirect_uri' );
 	is( $error,'invalid_request','has error' );

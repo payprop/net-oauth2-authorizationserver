@@ -141,6 +141,13 @@ sub _verify_client {
 			return ( 0, 'invalid_request' );
 		}
 
+		if (
+			# implies Authorization Code Grant, not Implicit Grant
+			$self->clients->{ $client_id }{ client_secret }
+		) {
+			return ( 0, 'unauthorized_client' );
+		}
+
         return ( 1 );
     }
 
