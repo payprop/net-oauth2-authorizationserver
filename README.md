@@ -11,13 +11,13 @@ Authorization Server
 
 # VERSION
 
-0.09
+0.10
 
 # SYNOPSIS
 
     my $Server = Net::OAuth2::AuthorizationServer->new;
 
-    my $Grant  = $Server->auth_code_grant(
+    my $Grant  = $Server->$grant_type(
         ...
     );
 
@@ -52,13 +52,11 @@ OAuth Resource Owner Password Grant as document at [http://tools.ietf.org/html/r
 
 See [Net::OAuth2::AuthorizationServer::PasswordGrant](https://metacpan.org/pod/Net::OAuth2::AuthorizationServer::PasswordGrant).
 
-## client\_grant
+## client\_credentials\_grant
 
-Not yet implemented.
+OAuth Client Credentials Grant as document at [http://tools.ietf.org/html/rfc6749#section-4.4](http://tools.ietf.org/html/rfc6749#section-4.4).
 
-## extension\_grant
-
-Not yet implemented.
+See [Net::OAuth2::AuthorizationServer::ClientCredentialsGrant](https://metacpan.org/pod/Net::OAuth2::AuthorizationServer::ClientCredentialsGrant).
 
 # SEE ALSO
 

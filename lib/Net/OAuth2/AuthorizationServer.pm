@@ -11,13 +11,13 @@ Authorization Server
 
 =head1 VERSION
 
-0.09
+0.10
 
 =head1 SYNOPSIS
 
     my $Server = Net::OAuth2::AuthorizationServer->new;
 
-    my $Grant  = $Server->auth_code_grant(
+    my $Grant  = $Server->$grant_type(
         ...
     );
 
@@ -43,8 +43,9 @@ use Types::Standard qw/ :all /;
 use Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant;
 use Net::OAuth2::AuthorizationServer::ImplicitGrant;
 use Net::OAuth2::AuthorizationServer::PasswordGrant;
+use Net::OAuth2::AuthorizationServer::ClientCredentialsGrant;
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 =head1 GRANT TYPES
 
@@ -87,13 +88,18 @@ sub password_grant {
     return Net::OAuth2::AuthorizationServer::PasswordGrant->new( @args );
 }
 
-=head2 client_grant
+=head2 client_credentials_grant
 
-Not yet implemented.
+OAuth Client Credentials Grant as document at L<http://tools.ietf.org/html/rfc6749#section-4.4>.
 
-=head2 extension_grant
+See L<Net::OAuth2::AuthorizationServer::ClientCredentialsGrant>.
 
-Not yet implemented.
+=cut
+
+sub client_credentials_grant {
+    my ( $self, @args ) = @_;
+    return Net::OAuth2::AuthorizationServer::ClientCredentialsGrant->new( @args );
+}
 
 =head1 SEE ALSO
 

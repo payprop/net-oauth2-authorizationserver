@@ -22,6 +22,37 @@ methods to handle the revoking in your app. So that would be halfway between
 the "simple" and the "realistic" way. L<CLIENT SECRET, TOKEN SECURITY, AND JWT>
 has more detail about JWTs.
 
+=head1 WHICH GRANT TYPE SHOULD I USE?
+
+You are advised to read L<https://tools.ietf.org/html/rfc6749> and figure that
+out depending on your needs, but to simplify - if you are implementing an app
+server and need to give out access tokens you should be using the "Authorization
+Code Grant" as this is the most secure flow. If you need to do a call from javascript
+then the "Implicit Grant" is probably what you need. You should B<not> use the
+"Password Grant" or "Client Credentials Grant" unless your client/server apps
+are non-public facing or you B<really> know what you are doing.
+
+The "Authorization Code Grant" is used to obtain both access tokens and refresh
+tokens and is optimized for confidential clients. Since this is a redirection-based
+flow, the client must be capable of interacting with the resource owner's user-agent
+(typically a web browser) and capable of receiving incoming requests (via
+redirection) from the authorization server.
+
+The "Implicit Grant" is used to obtain access tokens (it does not support the
+issuance of refresh tokens) and is optimized for public clients known to operate
+a particular redirection URI. These clients are typically implemented in a browser
+using a scripting language such as JavaScript.
+
+The "Password Grant" type is suitable in cases where the resource owner has a trust
+relationship with the client, such as the device operating system or a highly
+privileged application. The authorization server should take special care when
+enabling this grant type and only allow it when other flows are not viable.
+
+The "Client Credentials Grant" can request an access token using only its client
+credentials (or other supported means of authentication) when the client is
+requesting access to the protected resources under its control, or those of another
+resource owner that have been previously arranged with the authorization server.
+
 =head1 CONSTRUCTOR ARGUMENTS
 
 The following are accepted by all grant types
@@ -32,10 +63,8 @@ A hashref of client details keyed like so:
 
   clients => {
     $client_id => {
-      # note that setting a client_secret implies the "Authorization Code Grant"
-      # if this is not set then "Implicit Grant" is implied (that has an optional
-      # redirect_uri parameter)
-      client_secret => $client_secret
+      client_secret => $client_secret,
+      redirect_uri  => $redirect_uri,  # in the case of "Implicit Grant"
       scopes        => {
         eat       => 1,
         drink     => 0,
@@ -44,9 +73,22 @@ A hashref of client details keyed like so:
     },
   },
 
+Note that setting a client_secret implies either "Authorization Code Grant" or
+"Client Credentials Grant". if this is not set then "Implicit Grant" is implied
+(that has an optional redirect_uri parameter)
+
 Note the clients config is not required if you add all of the necessary callback
 functions detailed below, but is necessary for running the grant types in their
 simplest form (when there are *no* callbacks provided)
+
+=head2 users
+
+In the case of the "Password Grant" you should supply a hash of user to password
+mappings as well as the above client details:
+
+	users => {
+		test_user => 'reallyletmein',
+	}
 
 =head2 jwt_secret
 

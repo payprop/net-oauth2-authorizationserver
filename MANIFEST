@@ -13,6 +13,7 @@ examples/oauth2_server_simple.pl
 examples/oauth2_server_simple_jwt.pl
 lib/Net/OAuth2/AuthorizationServer.pm
 lib/Net/OAuth2/AuthorizationServer/AuthorizationCodeGrant.pm
+lib/Net/OAuth2/AuthorizationServer/ClientCredentialsGrant.pm
 lib/Net/OAuth2/AuthorizationServer/Defaults.pm
 lib/Net/OAuth2/AuthorizationServer/ImplicitGrant.pm
 lib/Net/OAuth2/AuthorizationServer/Manual.pod
@@ -24,6 +25,10 @@ t/net/oauth2/authorizationserver/authorizationcodegrant.t
 t/net/oauth2/authorizationserver/authorizationcodegrant_legacy_args.t
 t/net/oauth2/authorizationserver/authorizationcodegrant_no_jwt.t
 t/net/oauth2/authorizationserver/authorizationcodegrant_tests.pm
+t/net/oauth2/authorizationserver/clientcredentialsgrant.t
+t/net/oauth2/authorizationserver/clientcredentialsgrant_legacy_args.t
+t/net/oauth2/authorizationserver/clientcredentialsgrant_no_jwt.t
+t/net/oauth2/authorizationserver/clientcredentialsgrant_tests.pm
 t/net/oauth2/authorizationserver/defaults.t
 t/net/oauth2/authorizationserver/implicitgrant.t
 t/net/oauth2/authorizationserver/implicitgrant_legacy_args.t

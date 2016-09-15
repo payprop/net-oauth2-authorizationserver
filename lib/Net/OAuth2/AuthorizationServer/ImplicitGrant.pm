@@ -3,6 +3,7 @@ package Net::OAuth2::AuthorizationServer::ImplicitGrant;
 =head1 NAME
 
 Net::OAuth2::AuthorizationServer::ImplicitGrant - OAuth2 Resource Owner Implicit Grant
+
 =head1 SYNOPSIS
 
   my $Grant = Net::OAuth2::AuthorizationServer::ImplicitGrant->new(

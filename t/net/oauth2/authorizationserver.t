@@ -42,4 +42,11 @@ isa_ok(
     'Net::OAuth2::AuthorizationServer::ImplicitGrant'
 );
 
+isa_ok(
+    $Grant = $Server->client_credentials_grant(
+		clients => { foo => {} },
+    ),
+    'Net::OAuth2::AuthorizationServer::ClientCredentialsGrant'
+);
+
 done_testing();
