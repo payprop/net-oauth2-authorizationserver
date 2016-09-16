@@ -1,5 +1,8 @@
 Revision history for Net-OAuth2-AuthorizationServer
 
+0.11     2016-09-16
+        - Add more documentation to Net::OAuth2::AuthorizationServer::Manual
+
 0.10     2016-09-15
         - Add Net::OAuth2::AuthorizationServer::ClientCredentialsGrant
         - Add more documentation to Net::OAuth2::AuthorizationServer::Manual
