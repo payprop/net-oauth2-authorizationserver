@@ -90,6 +90,9 @@ mappings as well as the above client details:
 		test_user => 'reallyletmein',
 	}
 
+Again, the users config is not required if you add all of the necessary callback
+functions detailed below.
+
 =head2 jwt_secret
 
 This is optional. If set JWTs will be returned for the auth codes, access, and
@@ -200,22 +203,25 @@ this case /oauth/login) that points to the same route as the /login route
 
 =head2 verify_client_cb
 
-Reference: L<http://tools.ietf.org/html/rfc6749#section-4.1.1>
+References: L<http://tools.ietf.org/html/rfc6749#section-4.1.1>, L<http://tools.ietf.org/html/rfc6749#section-4.2.1>, 
+L<http://tools.ietf.org/html/rfc6749#section-4.3.1>, L<http://tools.ietf.org/html/rfc6749#section-4.4.1>, 
 
 A callback to verify if the client asking for an authorization code is known
 to the Resource Server and allowed to get an authorization code for the passed
 scopes.
 
-The args hash should contain the client id, and an array reference of request
-scopes. The callback should return a list with two elements. The first element
-is either 1 or 0 to say that the client is allowed or disallowed, the second
-element should be the error message in the case of the client being disallowed:
+The args hash should contain the client id, an array reference of request scopes,
+the redirect_uri, the response_type, and the client_secret (note not all of these
+are required depending on the grant type. The callback should return a list with
+two elements. The first element is either 1 or 0 to say that the client is allowed
+or disallowed, the second element should be the error message in the case of the
+client being disallowed:
 
   my $verify_client_sub = sub {
     my ( %args ) = @_;
 
-    my ( $obj,$client_id,$scopes_ref,$redirect_uri,$response_type )
-        = @args{ qw/ mojo_controller client_id scopes redirect_uri response_type / };
+    my ( $obj,$client_id,$scopes_ref,$redirect_uri,$response_type,$client_secret )
+        = @args{ qw/ mojo_controller client_id scopes redirect_uri response_type client_secret / };
 
     if (
       my $client = $obj->db->get_collection( 'clients' )
