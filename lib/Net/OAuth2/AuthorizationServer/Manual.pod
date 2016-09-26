@@ -254,7 +254,7 @@ the verify_auth_code callback for verification:
   my $store_auth_code_sub = sub {
     my ( %args ) = @_;
 
-    my ( $obj,$auth_code,$client_id,$expires_in,$uri,$scopes_ref ) = @_;
+    my ( $obj,$auth_code,$client_id,$expires_in,$uri,$scopes_ref ) =
         @args{qw/ mojo_controller auth_code client_id expires_in redirect_uri scopes / };
 
     my $auth_codes = $obj->db->get_collection( 'auth_codes' );
