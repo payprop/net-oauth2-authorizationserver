@@ -1,5 +1,8 @@
 Revision history for Net-OAuth2-AuthorizationServer
 
+0.12     2016-10-15
+        - Deprecate undocumented legacy_args flag
+
 0.11     2016-09-16
         - Add more documentation to Net::OAuth2::AuthorizationServer::Manual
 

@@ -117,6 +117,8 @@ sub verify_token_and_scope {
     );
 }
 
+my $warned_dep = 0;
+
 sub _delegate_to_cb_or_private {
 
     my $method = shift;
@@ -128,8 +130,11 @@ sub _delegate_to_cb_or_private {
 
     if ( my $cb = $self->$cb_method ) {
 
-		# TODO: deprecate legacy_args
+		# TODO: remove legacy_args in next version
         if ( my $obj = $self->legacy_args ) {
+
+			warn "->legacy_args of @{[ __PACKAGE__ ]} is DEPRECATED"
+				unless $warned_dep++;
 
             # for older users of Mojolicious::Plugin::OAuth2::Server need to pass
             # the right arguments in the right order to each function
