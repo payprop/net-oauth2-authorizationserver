@@ -13,12 +13,6 @@ use Try::Tiny;
 use Time::HiRes qw/ gettimeofday /;
 use MIME::Base64 qw/ encode_base64 /;
 
-# undocumented for Mojolicious::Plugin::OAuth2::Server
-has 'legacy_args' => (
-    is       => 'rw',
-    required => 0,
-);
-
 has 'jwt_secret' => (
     is       => 'ro',
     isa      => Str,
@@ -117,8 +111,6 @@ sub verify_token_and_scope {
     );
 }
 
-my $warned_dep = 0;
-
 sub _delegate_to_cb_or_private {
 
     my $method = shift;
@@ -129,56 +121,7 @@ sub _delegate_to_cb_or_private {
     my $p_method  = "_$method";
 
     if ( my $cb = $self->$cb_method ) {
-
-		# TODO: remove legacy_args in next version
-        if ( my $obj = $self->legacy_args ) {
-
-			warn "->legacy_args of @{[ __PACKAGE__ ]} is DEPRECATED"
-				unless $warned_dep++;
-
-            # for older users of Mojolicious::Plugin::OAuth2::Server need to pass
-            # the right arguments in the right order to each function
-            for ( $method ) {
-
-                /login_resource_owner|confirm_by_resource_owner|verify_client/ && do {
-                    return $cb->( $obj, @args{ qw/ client_id scopes redirect_uri response_type client_secret / } );
-                };
-
-				$self->_uses_user_passwords && /verify_user_password/ && do {
-                    return $cb->( $obj, @args{ qw/ client_id client_secret username password scopes / } );
-				};
-
-                $self->_uses_auth_codes && /store_auth_code/ && do {
-                    my @scopes = @{ $args{ scopes } };
-                    return $cb->(
-                        $obj, @args{ qw/ auth_code client_id expires_in redirect_uri / }, @scopes
-                    );
-                };
-
-                $self->_uses_auth_codes && /verify_auth_code/ && do {
-                    return $cb->( $obj,
-                        @args{ qw/ client_id client_secret auth_code redirect_uri / } );
-                };
-
-                /store_access_token/ && do {
-                    return $cb->(
-                        $obj,
-                        @args{
-                            qw/ client_id auth_code access_token refresh_token expires_in scopes old_refresh_token /
-                        }
-                    );
-                };
-
-                /verify_access_token/ && do {
-                    return $cb->( $obj, @args{ qw/ access_token scopes is_refresh_token / } );
-                };
-            }
-
-        }
-        else {
-            return $cb->( %args );
-        }
-
+        return $cb->( %args );
     }
     else {
         return $self->$p_method( %args );
