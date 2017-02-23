@@ -220,10 +220,11 @@ will also contain the B<client secret> or for an Implicit Grant B<response type>
 and optionally B<redirect uri> will be present, or for a Code Grant 
 B<response type> will be present.
 
-The callback should return a list with two elements. The first element is 
+The callback should return a list with three elements. The first element is 
 either 1 or 0 to say that the client is allowed or disallowed, the second 
 element should be the error message in the case of the client being 
-disallowed:
+disallowed and the third should be the ammended scopes_ref denoting the 
+allowed scopes after filtering by the client allowed scopes:
 
   my $verify_client_sub = sub {
     my ( %args ) = @_;
@@ -232,14 +233,15 @@ disallowed:
         = @args{ qw/ mojo_controller client_id scopes client_secret redirect_uri response_type / };
 
     if (my $client = $obj->db->get_collection( 'clients' )->find_one({ client_id => $client_id })) {
+        my $client_scopes = [];
 
         # Check scopes
         foreach my $scope ( @{ $scopes_ref // [] } ) {
 
           if ( ! exists( $client->{scopes}{$scope} ) ) {
             return ( 0,'invalid_scope' );
-          } elsif ( ! $client->{scopes}{$scope} ) {
-            return ( 0,'access_denied' );
+          } elsif ( $client->{scopes}{$scope} ) {
+            push @{$client_scopes}, $scope;
           }
         }
 
@@ -258,7 +260,7 @@ disallowed:
             return (0, 'access_denied');
         }
 
-        return ( 1 );
+        return ( 1, undef, $client_scopes );
     }
 
     return ( 0,'unauthorized_client' );

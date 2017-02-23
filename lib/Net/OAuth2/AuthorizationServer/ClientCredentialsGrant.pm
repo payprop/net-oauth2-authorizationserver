@@ -90,14 +90,14 @@ sub _verify_client {
         = @args{ qw/ client_id scopes client_secret / };
 
     if ( my $client = $self->clients->{ $client_id } ) {
+        my $client_scopes = [];
 
         foreach my $scope ( @{ $scopes_ref // [] } ) {
-
-            if ( !exists( $self->clients->{ $client_id }{ scopes }{ $scope } ) ) {
+            if ( ! exists($self->clients->{ $client_id }{ scopes }{ $scope }) ) {
                 return ( 0, 'invalid_scope' );
             }
-            elsif ( !$self->clients->{ $client_id }{ scopes }{ $scope } ) {
-                return ( 0, 'access_denied' );
+            elsif ( $self->clients->{ $client_id }{ scopes }{ $scope } ) {
+                push @{$client_scopes}, $scope;
             }
         }
 
@@ -108,7 +108,7 @@ sub _verify_client {
             return ( 0, 'invalid_grant' );
         }
 
-        return ( 1 );
+        return ( 1, undef, $client_scopes );
     }
 
     return ( 0, 'unauthorized_client' );
