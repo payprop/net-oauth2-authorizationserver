@@ -206,27 +206,29 @@ this case /oauth/login) that points to the same route as the /login route
 References: L<http://tools.ietf.org/html/rfc6749#section-4.1.1>, L<http://tools.ietf.org/html/rfc6749#section-4.2.1>, 
 L<http://tools.ietf.org/html/rfc6749#section-4.3.1>, L<http://tools.ietf.org/html/rfc6749#section-4.4.1>, 
 
-A callback to verify if the client asking for an authorization code is known
-to the Resource Server and allowed to get an authorization code for the passed
-scopes.
+A callback to verify if the B<client> asking for authorization is known to the 
+B<authorization server> and allowed to get authorization for the passed scopes.
 
-The args hash should contain the client id, an array reference of request scopes,
-the redirect_uri, the response_type, and the client_secret (note not all of these
-are required depending on the grant type. The callback should return a list with
-two elements. The first element is either 1 or 0 to say that the client is allowed
-or disallowed, the second element should be the error message in the case of the
-client being disallowed:
+The args hash will always contain the B<client id> and an array reference of 
+B<requested scopes>. Additionally for a ClientCredentials Grant the args hash
+will also contain the B<client secret> or for an Implicit Grant B<response type>
+and optionally B<redirect uri> will be present, or for a Code Grant 
+B<response type> will be present.
+
+The callback should return a list with two elements. The first element is 
+either 1 or 0 to say that the client is allowed or disallowed, the second 
+element should be the error message in the case of the client being 
+disallowed:
 
   my $verify_client_sub = sub {
     my ( %args ) = @_;
 
-    my ( $obj,$client_id,$scopes_ref,$redirect_uri,$response_type,$client_secret )
-        = @args{ qw/ mojo_controller client_id scopes redirect_uri response_type client_secret / };
+    my ( $obj,$client_id,$scopes_ref,$client_secret,$redirect_uri,$response_type )
+        = @args{ qw/ mojo_controller client_id scopes client_secret redirect_uri response_type / };
 
-    if (
-      my $client = $obj->db->get_collection( 'clients' )
-        ->find_one({ client_id => $client_id })
-    ) {
+    if (my $client = $obj->db->get_collection( 'clients' )->find_one({ client_id => $client_id })) {
+
+        # Check scopes
         foreach my $scope ( @{ $scopes_ref // [] } ) {
 
           if ( ! exists( $client->{scopes}{$scope} ) ) {
@@ -234,6 +236,21 @@ client being disallowed:
           } elsif ( ! $client->{scopes}{$scope} ) {
             return ( 0,'access_denied' );
           }
+        }
+
+        # Implicit Grant Checks
+        if ( $response_type && $response_type eq 'token' ) {
+          # If 'credentials' have been assigned Implicit Grant should be prevented, so check for secret
+          return (0, 'unauthorized_grant') if $client->{'secret'};
+
+          # Check redirect_uri
+          return (0, 'access_denied') 
+              if ($client->{'redirect_uri'} && (!$redirect_uri || $redirect_uri ne $client->{'redirect_uri'});
+        }
+
+        # Credentials Grant Checks
+        if ($client_secret && $client_secret ne $client->{'secret'}) {
+            return (0, 'access_denied');
         }
 
         return ( 1 );
