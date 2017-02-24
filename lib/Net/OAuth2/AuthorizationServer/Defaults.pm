@@ -142,7 +142,7 @@ sub _verify_client {
 
     my ( $client_id, $scopes_ref ) = @args{ qw/ client_id scopes / };
 
-    if ( my $client = $self->clients->{ $client_id } ) {
+    if ( my $client = $self->clients->{ $client_id // '' } ) {
         my $client_scopes = [];
 
         foreach my $scope ( @{ $scopes_ref // [] } ) {
