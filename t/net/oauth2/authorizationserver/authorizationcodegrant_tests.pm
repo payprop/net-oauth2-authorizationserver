@@ -68,7 +68,6 @@ sub run_tests {
 	ok( ! $error,'has no error' );
 
 	foreach my $t (
-		[ { scopes => [ qw/ eat sleep drink / ] },'access_denied','disallowed scopes' ],
 		[ { scopes => [ qw/ eat sleep yawn / ] },'invalid_scope','invalid scopes' ],
 		[ { client_id => 'another_client' },'unauthorized_client','invalid client' ],
 	) {
@@ -77,6 +76,16 @@ sub run_tests {
 		ok( ! $res,'->verify_client, ' . $t->[2] );
 		is( $error,$t->[1],'has error' );
 	}
+
+    foreach my $t (
+		[ { scopes => [ qw/ eat sleep drink / ] },[ qw / eat sleep / ],'disallowed scopes' ],
+    ) {
+        my $scopes;
+        ( $res, $error, $scopes ) = $Grant->verify_client( %valid_client,%{ $t->[0] } );
+
+        ok ( $res, '->verify_client, ' . $t->[2] );
+        cmp_deeply( $scopes, $t->[1], 'has reduced scopes' );
+    }
 
 	note( "store_auth_code" );
 
