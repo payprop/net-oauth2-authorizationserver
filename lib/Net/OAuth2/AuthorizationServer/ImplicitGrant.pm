@@ -32,8 +32,8 @@ Net::OAuth2::AuthorizationServer::ImplicitGrant - OAuth2 Resource Owner Implicit
     ...
   }
 
-  # have resource owner confirm scopes
-  my $confirmed = $Grant->confirm_by_resource_owner(
+  # have resource owner confirm (and perhaps modify) scopes
+  my ( $confirmed,$error,$scopes_ref ) = $Grant->confirm_by_resource_owner(
     client_id       => $client_id,
     scopes          => [ qw/ list of scopes / ],
   );
@@ -41,7 +41,7 @@ Net::OAuth2::AuthorizationServer::ImplicitGrant - OAuth2 Resource Owner Implicit
   # generate a token
   my $token = $Grant->token(
     client_id       => $client_id,
-    scopes          => [ qw/ list of scopes / ],
+    scopes          => $scopes_ref,
     redirect_uri    => $redirect_uri,
     user_id         => $user_id,      # optional
   );
@@ -50,13 +50,13 @@ Net::OAuth2::AuthorizationServer::ImplicitGrant - OAuth2 Resource Owner Implicit
   $Grant->store_access_token(
     client_id         => $client,
     access_token      => $access_token,
-    scopes            => [ qw/ list of scopes / ],
+    scopes            => $scopes_ref,
   );
 
   # verify an access token
   my ( $is_valid,$error ) = $Grant->verify_access_token(
     access_token     => $access_token,
-    scopes           => [ qw/ list of scopes / ],
+    scopes           => $scopes_ref,
   );
 
 =head1 DESCRIPTION

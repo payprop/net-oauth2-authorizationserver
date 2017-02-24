@@ -36,8 +36,8 @@ Net::OAuth2::AuthorizationServer::PasswordGrant - OAuth2 Resource Owner Password
     ...
   }
 
-  # have resource owner confirm scopes
-  my $confirmed = $Grant->confirm_by_resource_owner(
+  # have resource owner confirm (and perhaps modify) scopes
+  my ( $confirmed,$error,$scopes_ref ) = $Grant->confirm_by_resource_owner(
     client_id       => $client_id,
     scopes          => [ qw/ list of scopes / ],
   );
@@ -45,7 +45,7 @@ Net::OAuth2::AuthorizationServer::PasswordGrant - OAuth2 Resource Owner Password
   # generate a token
   my $token = $Grant->token(
     client_id       => $client_id,
-    scopes          => [ qw/ list of scopes / ],
+    scopes          => $scopes_ref,
     type            => 'access', # one of: access, refresh
     redirect_uri    => $redirect_uri,
     user_id         => $user_id,      # optional
@@ -56,14 +56,14 @@ Net::OAuth2::AuthorizationServer::PasswordGrant - OAuth2 Resource Owner Password
     client_id         => $client,
     access_token      => $access_token,
     refresh_token     => $refresh_token,
-    scopes            => [ qw/ list of scopes / ],
+    scopes            => $scopes_ref,
     old_refresh_token => $old_refresh_token,
   );
 
   # verify an access token
   my ( $is_valid,$error ) = $Grant->verify_access_token(
     access_token     => $access_token,
-    scopes           => [ qw/ list of scopes / ],
+    scopes           => $scopes_ref,
     is_refresh_token => 0,
   );
 

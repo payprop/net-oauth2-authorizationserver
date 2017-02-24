@@ -29,8 +29,8 @@ Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant - OAuth2 Authorization 
     ...
   }
 
-  # have resource owner confirm scopes
-  my $confirmed = $Grant->confirm_by_resource_owner(
+  # have resource owner confirm (and perhaps modify) scopes
+  my ( $confirmed,$error,$scopes_ref ) = $Grant->confirm_by_resource_owner(
     client_id       => $client_id,
     scopes          => [ qw/ list of scopes / ],
   );
@@ -38,7 +38,7 @@ Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant - OAuth2 Authorization 
   # generate a token
   my $token = $Grant->token(
     client_id       => $client_id,
-    scopes          => [ qw/ list of scopes / ],
+    scopes          => $scopes_ref,
     type            => 'auth', # one of: auth, access, refresh
     redirect_uri    => $redirect_uri,
     user_id         => $user_id,      # optional
@@ -49,7 +49,7 @@ Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant - OAuth2 Authorization 
     auth_code       => $auth_code,
     client_id       => $client_id,
     redirect_uri    => $uri,
-    scopes          => [ qw/ list of scopes / ],
+    scopes          => $scopes_ref,
   );
 
   # verify an auth code
@@ -66,7 +66,7 @@ Net::OAuth2::AuthorizationServer::AuthorizationCodeGrant - OAuth2 Authorization 
     auth_code         => $auth_code,
     access_token      => $access_token,
     refresh_token     => $refresh_token,
-    scopes            => [ qw/ list of scopes / ],
+    scopes            => $scopes_ref,
     old_refresh_token => $old_refresh_token,
   );
 

@@ -130,7 +130,12 @@ sub _delegate_to_cb_or_private {
 
 sub _login_resource_owner { 1 }
 
-sub _confirm_by_resource_owner { 1 }
+sub _confirm_by_resource_owner {
+	my ( $self,%args ) = @_;
+
+	# out of the box we just pass back "yes you can" and the list of scopes
+	return ( 1,undef,$args{scopes} // [] );
+}
 
 sub _verify_client {
     my ( $self, %args ) = @_;

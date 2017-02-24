@@ -76,7 +76,7 @@ my $resource_owner_confirm_scopes_sub = sub {
     $c->redirect_to( '/oauth/confirm_scopes' );
   }
 
-  return $is_allowed;
+  return ( $is_allowed,undef,$scopes_ref );
 };
 
 my $verify_client_sub = sub {

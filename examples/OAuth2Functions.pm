@@ -60,7 +60,7 @@ sub _resource_owner_confirm_scopes {
 		$c->redirect_to( '/oauth/confirm_scopes' );
 	}
 
-	return $is_allowed;
+	return ( $is_allowed,undef,$scopes_ref );
 }
 
 sub _verify_client {

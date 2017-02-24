@@ -135,8 +135,12 @@ A callback to tell the grant module if the Resource Owner allowed or denied acce
 the Resource Server by the Client. The args hash should contain the client id,
 and an array reference of scopes requested by the client.
 
-It should return 1 if access is allowed, 0 if access is not allowed, otherwise
-it should call the redirect_to method on the controller and return undef:
+The callback should return a list with three elements. The first element is 1 if
+access is allowed, 0 if access is not allowed, otherwise undef if the flow was
+interrupted (e.g. calling redirect in a controller). The second element element should
+be the error message in the case of problems with the confirmation of the scopes. The
+third element should be an array reference of scopes as the user may choose to modify
+the list of requested scopes when confirming them.
 
   my $resource_owner_confirm_scopes_sub = sub {
     my ( %args ) = @_;
@@ -144,6 +148,7 @@ it should call the redirect_to method on the controller and return undef:
     my ( $obj,$client_id,$scopes_ref,$redirect_uri,$response_type )
         = @args{ qw/ mojo_controller client_id scopes redirect_uri response_type / };
 
+    my $error;
     my $is_allowed = $obj->flash( "oauth_${client_id}" );
 
     # if user hasn't yet allowed the client access, or if they denied
@@ -159,7 +164,7 @@ it should call the redirect_to method on the controller and return undef:
       $obj->redirect_to( '/oauth/confirm_scopes' );
     }
 
-    return $is_allowed;
+    return ( $is_allowed,$error,$scopes_ref );
   };
 
 Note that you need to pass on the current url (with query) so it can be returned

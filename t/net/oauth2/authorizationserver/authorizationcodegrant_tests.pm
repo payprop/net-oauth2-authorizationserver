@@ -46,13 +46,20 @@ sub run_tests {
 	);
 
 	ok( $Grant->login_resource_owner,'login_resource_owner' );
-	ok( $Grant->confirm_by_resource_owner,'confirm_by_resource_owner' );
+	my ( $confirmed,$confirm_error,$scopes_ref ) = $Grant->confirm_by_resource_owner(
+		client_id => 'test_client',
+		scopes => [ qw/ eat sleep / ],
+	);
+	
+	ok( $confirmed,'confirm_by_resource_owner' );
+	ok( !$confirm_error,' ... no error' );
+	cmp_deeply( $scopes_ref,[ qw/ eat sleep / ],' ... returned scopes ref' );
 
 	note( "verify_client" );
 
 	my %valid_client = (
 		client_id => 'test_client',
-		scopes    => [ qw/ eat sleep / ],
+		scopes    => $scopes_ref,
 	);
 
 	my ( $res,$error ) = $Grant->verify_client( %valid_client );
@@ -75,7 +82,7 @@ sub run_tests {
 
 	ok( my $auth_code = $Grant->token(
 		client_id    => 'test_client',
-		scopes       => [ qw/ eat sleep / ],
+		scopes       => $scopes_ref,
 		type         => 'auth',
 		redirect_uri => 'https://come/back',
 		user_id      => 1,
@@ -88,7 +95,7 @@ sub run_tests {
 		client_id    => 'test_client',
 		auth_code    => $auth_code,
 		redirect_uri => 'https://come/back',
-		scopes       => [ qw/ eat sleep / ],
+		scopes       => $scopes_ref,
 	),'->store_auth_code' );
 
 	note( "verify_auth_code" );
@@ -136,7 +143,7 @@ sub run_tests {
 
 	ok( my $access_token = $Grant->token(
 		client_id    => 'test_client',
-		scopes       => [ qw/ eat sleep / ],
+		scopes       => $scopes_ref,
 		type         => 'access',
 		user_id      => 1,
 	),'->token (access token)' );
@@ -146,7 +153,7 @@ sub run_tests {
 
 	ok( my $refresh_token = $Grant->token(
 		client_id    => 'test_client',
-		scopes       => [ qw/ eat sleep / ],
+		scopes       => $scopes_ref,
 		type         => 'refresh',
 		user_id      => 1,
 	),'->token (refresh token)' );
@@ -159,14 +166,14 @@ sub run_tests {
 		auth_code     => $og_auth_code,
 		access_token  => $access_token,
 		refresh_token => $refresh_token,
-		scopes       => [ qw/ eat sleep / ],
+		scopes        => $scopes_ref,
 	),'->store_access_token' );
 
 	note( "verify_access_token" );
 
 	( $res,$error ) = $Grant->verify_access_token(
 		access_token     => $access_token,
-		scopes           => [ qw/ eat sleep / ],
+		scopes           => $scopes_ref,
 		is_refresh_token => 0,
 	);
 
@@ -175,7 +182,7 @@ sub run_tests {
 
 	( $res,$error ) = $Grant->verify_access_token(
 		access_token     => $refresh_token,
-		scopes           => [ qw/ eat sleep / ],
+		scopes           => $scopes_ref,
 		is_refresh_token => 1,
 	);
 
@@ -202,7 +209,7 @@ sub run_tests {
 
 	( $res,$error ) = $Grant->verify_token_and_scope(
 		auth_header      => "Bearer $access_token",
-		scopes           => [ qw/ eat sleep / ],
+		scopes           => $scopes_ref,
 		is_refresh_token => 0,
 	);
 
@@ -211,7 +218,7 @@ sub run_tests {
 
 	( $res,$error ) = $Grant->verify_token_and_scope(
 		auth_header   => "Bearer $access_token",
-		scopes        => [ qw/ eat sleep / ],
+		scopes        => $scopes_ref,
 		refresh_token => $refresh_token,
 	);
 
@@ -223,7 +230,7 @@ sub run_tests {
 
 	( $res,$error ) = $Grant->verify_access_token(
 		access_token     => $access_token,
-		scopes           => [ qw/ eat sleep / ],
+		scopes           => $scopes_ref,
 		is_refresh_token => 0,
 	);
 
@@ -240,7 +247,7 @@ sub run_tests {
 
 		( $res,$error ) = $Grant->verify_access_token(
 			access_token     => $access_token,
-			scopes           => [ qw/ eat sleep / ],
+			scopes           => $scopes_ref,
 			is_refresh_token => 0,
 		);
 
