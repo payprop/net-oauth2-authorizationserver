@@ -11,7 +11,7 @@ Authorization Server
 
 # VERSION
 
-0.13
+0.14
 
 # SYNOPSIS
 
@@ -64,9 +64,13 @@ See [Net::OAuth2::AuthorizationServer::ClientCredentialsGrant](https://metacpan.
 
 [Mojo::JWT](https://metacpan.org/pod/Mojo::JWT) - encode/decode JWTs
 
-# AUTHOR
+# AUTHOR & CONTRIBUTORS
 
 Lee Johnson - `leejo@cpan.org`
+
+With contributions from:
+
+Martin Renvoize - `martin.renvoize@ptfs-europe.com`
 
 # LICENSE
 
