@@ -134,7 +134,11 @@ sub _confirm_by_resource_owner {
 	my ( $self,%args ) = @_;
 
 	# out of the box we just pass back "yes you can" and the list of scopes
-	return ( 1,undef,$args{scopes} // [] );
+	# note the wantarray is here for backwards compat as this method used
+	# to just return 1 but now passing the scopes back requires an array
+	return wantarray
+		? ( 1,undef,$args{scopes} // [] )
+		: 1;
 }
 
 sub _verify_client {
