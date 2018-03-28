@@ -22,8 +22,8 @@ Net::OAuth2::AuthorizationServer::PasswordGrant - OAuth2 Resource Owner Password
     },
   );
 
-  # verify a client against known clients
-  my ( $is_valid,$error,$scopes ) = $Grant->verify_user_password(
+  # verify a client and username against known clients/users
+  my ( $client_id,$error,$scopes,$username ) = $Grant->verify_user_password(
     client_id     => $client_id,
     client_secret => $client_secret,
     username      => $username,
