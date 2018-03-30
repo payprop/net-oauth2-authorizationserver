@@ -309,15 +309,21 @@ sub _verify_access_token_jwt {
 sub _normalize_auth_details {
   my ( $self, $auth_orig ) = @_;
 
-  my %auth_details = (
-    client_id => exists $auth_orig->{client_id} ? $auth_orig->{client_id} : $auth_orig->{client},
-    scopes    => exists $auth_orig->{scopes}    ? $auth_orig->{scopes}    : $auth_orig->{scope},
-    user_id   => exists $auth_orig->{user_id}   ? $auth_orig->{user_id}   : undef,
+  # fill up the return data structure from the first field we see in the list
+  my %key_mapping = (
+    client  => [ 'client', 'client_id' ],
+    scopes  => [ 'scopes', 'scope' ],
+    user_id => [ 'user_id' ],
+    map { ($_ => [ $_ ]) } qw/ jti aud type /, # more? less?
   );
 
-  for my $key ( qw/ jti aud type / ) {
-    next unless exists $auth_orig->{$key};
-    $auth_details{ $key } = $auth_orig->{$key};
+  my %auth_details;
+  for my $key ( keys %key_mapping ) {
+    for my $dest_key ( @{ $key_mapping{$key} } ) {
+      if ( exists $auth_orig->{ $dest_key } ) {
+        $auth_details{ $key } = $auth_orig->{ $dest_key };
+      }
+    }
   }
 
   return \%auth_details;
