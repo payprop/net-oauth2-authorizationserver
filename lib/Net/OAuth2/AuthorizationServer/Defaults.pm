@@ -236,8 +236,9 @@ sub _verify_access_token {
                     if !$self->_has_scope( $scope, $self->refresh_tokens->{ $a_token }{ scope } );
             }
         }
+        my $details = $self->_normalize_auth_details( $self->refresh_tokens->{ $a_token } );
 
-        return ( $self->refresh_tokens->{ $a_token }{ client_id }, undef );
+        return ( $details, undef );
     }
     elsif ( exists( $self->access_tokens->{ $a_token } ) ) {
 
@@ -253,8 +254,8 @@ sub _verify_access_token {
             }
 
         }
-
-        return ( $self->access_tokens->{ $a_token }{ client_id }, undef );
+        my $details = $self->_normalize_auth_details( $self->access_tokens->{ $a_token } );
+        return ( $details, undef );
     }
 
     return ( 0, 'invalid_grant' );
@@ -295,10 +296,38 @@ sub _verify_access_token_jwt {
             }
         }
 
-        return ( $access_token_payload->{client}, undef, $access_token_payload->{scopes} );
+        return ( $self->_normalize_auth_details( $access_token_payload ), undef, $access_token_payload->{scopes} );
     }
 
     return ( 0, 'invalid_grant' );
+}
+
+# be explicit in the keys of the auth details hash returned to the client
+# this also takes into account some known differences in keys, eg
+#   scope => scopes, client => client_id, user_id ? (not available without jwt)
+
+sub _normalize_auth_details {
+  my ( $self, $auth_orig ) = @_;
+
+  # fill up the return data structure from the first field we see in the list
+  my %key_mapping = (
+    client  => [ 'client', 'client_id' ],
+    scopes  => [ 'scopes', 'scope' ],
+    user_id => [ 'user_id' ],
+    map { ($_ => [ $_ ]) } qw/ jti aud type iat exp /, # more? less?
+  );
+
+  my %auth_details;
+  KEY: for my $key ( keys %key_mapping ) {
+    for my $dest_key ( @{ $key_mapping{$key} } ) {
+      if ( exists $auth_orig->{ $dest_key } ) {
+        $auth_details{ $key } = $auth_orig->{ $dest_key };
+        next KEY;
+      }
+    }
+  }
+
+  return \%auth_details;
 }
 
 sub _revoke_access_token {
