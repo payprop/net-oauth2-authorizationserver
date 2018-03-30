@@ -314,7 +314,7 @@ sub _normalize_auth_details {
     client  => [ 'client', 'client_id' ],
     scopes  => [ 'scopes', 'scope' ],
     user_id => [ 'user_id' ],
-    map { ($_ => [ $_ ]) } qw/ jti aud type /, # more? less?
+    map { ($_ => [ $_ ]) } qw/ jti aud type iat exp /, # more? less?
   );
 
   my %auth_details;
