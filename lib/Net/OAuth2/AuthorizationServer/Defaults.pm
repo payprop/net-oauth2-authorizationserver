@@ -318,10 +318,11 @@ sub _normalize_auth_details {
   );
 
   my %auth_details;
-  for my $key ( keys %key_mapping ) {
+  KEY: for my $key ( keys %key_mapping ) {
     for my $dest_key ( @{ $key_mapping{$key} } ) {
       if ( exists $auth_orig->{ $dest_key } ) {
         $auth_details{ $key } = $auth_orig->{ $dest_key };
+        next KEY;
       }
     }
   }
