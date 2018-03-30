@@ -128,8 +128,8 @@ sub run_tests {
 	my %expected_details_core = (
 	  # not available in default token without jwt
 		# user_id => 'test_user',
-		client_id => 'test_client',
-		scopes    => [ 'eat', 'sleep' ],
+		client => 'test_client',
+		scopes => [ 'eat', 'sleep' ],
 	);
 	my %got_details_core = map { ( $_ => $res->{$_} ) } keys %expected_details_core;
 	is_deeply( \%got_details_core, \%expected_details_core, 'core auth details fields look okay' );
