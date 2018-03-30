@@ -45,7 +45,7 @@ sub run_tests {
 		client_id => 'test_client',
 		scopes => [ qw/ eat sleep / ],
 	);
-	
+
 	ok( $confirmed,'confirm_by_resource_owner' );
 	ok( !$confirm_error,' ... no error' );
 	cmp_deeply( $scopes_ref,[ qw/ eat sleep / ],' ... returned scopes ref' );
@@ -122,6 +122,20 @@ sub run_tests {
 	);
 
 	ok( $res,'->verify_access_token, valid access token' );
+
+	isa_ok( $res, 'HASH', '->verify_access_token returns auth details as HASH' );
+
+	my %expected_details_core = (
+	  # not available in default token without jwt
+		# user_id => 'test_user',
+		client_id => 'test_client',
+		scopes    => [ 'eat', 'sleep' ],
+	);
+	my %got_details_core = map { ( $_ => $res->{$_} ) } keys %expected_details_core;
+	is_deeply( \%got_details_core, \%expected_details_core, 'core auth details fields look okay' );
+	is( $res->{user_id}, 'test_user', 'user_id looks okay (if specified)' )
+		if exists $res->{user_id} && $res->{user_id};
+
 	ok( ! $error,'has no error' );
 
 	( $res,$error ) = $Grant->verify_access_token(
