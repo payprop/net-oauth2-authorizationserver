@@ -69,7 +69,7 @@ Net::OAuth2::AuthorizationServer::PasswordGrant - OAuth2 Resource Owner Password
   );
 
   # or:
-  my ( $client,$error,$scope,$user_id ) = $Grant->verify_token_and_scope(
+  my ( $oauth_details,$error ) = $Grant->verify_token_and_scope(
     refresh_token    => $refresh_token,
     auth_header      => $http_authorization_header,
   );
@@ -176,7 +176,16 @@ sub _verify_user_password {
         return ( 0, 'invalid_grant' );
     }
     else {
-        return ( $client_id, undef, $scopes, $username );
+        return (
+			{
+				client_id => $client_id,
+				scopes    => $scopes,
+				username  => $username
+			},
+			undef,
+			$scopes,   # here for back compat
+			$username, # here for back compat
+		);
     }
 
 }
