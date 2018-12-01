@@ -253,12 +253,14 @@ sub _verify_auth_code_jwt {
 
     my $auth_code_payload;
 
+    my $invalid_jwt;
     try {
         $auth_code_payload = Mojo::JWT->new( secret => $self->jwt_secret )->decode( $auth_code );
     }
     catch {
-        return ( 0, 'invalid_grant' );
+        $invalid_jwt = 1;
     };
+    return ( 0, 'invalid_grant' ) if $invalid_jwt;
 
     if (  !$auth_code_payload
         or $auth_code_payload->{ type } ne 'auth'
