@@ -105,7 +105,7 @@ sub client_credentials_grant {
 
 L<Mojolicious::Plugin::OAuth2::Server> - A Mojolicious plugin using this module
 
-L<Mojo::JWT> - encode/decode JWTs
+L<Crypt::JWT> - encode/decode JWTs
 
 =head1 AUTHOR & CONTRIBUTORS
 

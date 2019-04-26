@@ -1,5 +1,8 @@
 Revision history for Net-OAuth2-AuthorizationServer
 
+0.21     2019-03-15
+        - Add support for JWEs as well as JWTs (GH #24)
+
 0.20     2019-03-01
         - Fix example oauth2_client.pl (GH #23)
 
