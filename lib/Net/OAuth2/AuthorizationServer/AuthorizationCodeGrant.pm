@@ -234,7 +234,7 @@ sub _verify_auth_code {
         return ( 0, 'invalid_grant' );
     }
     else {
-        return ( 1, undef, $self->auth_codes->{ $auth_code }{ scope } );
+        return ( 1, undef, @{ $self->auth_codes->{ $auth_code } }{ qw/ scope user_id / } );
     }
 
 }
@@ -270,8 +270,9 @@ sub _verify_auth_code_jwt {
     }
 
     my $scope = $auth_code_payload->{ scopes };
+    my $user_id = $auth_code_payload->{ user_id };
 
-    return ( $client_id, undef, $scope );
+    return ( $client_id, undef, $scope, $user_id );
 }
 
 =head1 AUTHOR
