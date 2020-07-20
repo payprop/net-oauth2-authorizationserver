@@ -14,3 +14,16 @@ examples/diagnostic.data/
 examples/journal/
 examples/mongod.lock
 examples/storage.bson
+
+# editing
+*.vim
+vim.session*
+.vscode
+.vstags
+.idea
+\#*\#
+*~
+*.swp
+
+# OS X nonsense
+*.DS_Store
